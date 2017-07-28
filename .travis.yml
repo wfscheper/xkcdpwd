@@ -1,0 +1,11 @@
+language: go
+
+go:
+  - 1.10.x
+  - master
+
+install:
+  - go get -v github.com/golang/dep
+  - make vendor
+
+script: make tests all
