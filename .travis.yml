@@ -1,11 +1,12 @@
 language: go
-
+sudo: false
 go:
-  - 1.10.x
-  - master
-
+- 1.10.x
+- master
 install:
-  - go get -v github.com/golang/dep
-  - make vendor
-
-script: make tests all
+- go get -v github.com/mattn/goveralls
+- go get -v github.com/golang/dep
+- make vendor
+script:
+- make tests all
+- $GOPATH/bin/goveralls -service=travis-ci
