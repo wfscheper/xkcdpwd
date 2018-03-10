@@ -1,4 +1,4 @@
-# xkcdpwd
+# xkcdpwd [![Build Status](https://travis-ci.org/wfscheper/xkcdpwd.svg?branch=master)](https://travis-ci.org/wfscheper/xkcdpwd) [![Coverage Status](https://coveralls.io/repos/github/wfscheper/xkcdpwd/badge.svg?branch=master)](https://coveralls.io/github/wfscheper/xkcdpwd?branch=master)
 
 A pass phrase generator in the style of XKCD comic **[Password Strength]**
 
