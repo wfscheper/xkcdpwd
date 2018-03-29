@@ -71,6 +71,7 @@ type Xkcdpwd struct {
 func (x *Xkcdpwd) Run() int {
 	var (
 		// flags
+		lang        string
 		separator   string
 		showVersion bool
 		wordCount   uint
@@ -81,6 +82,7 @@ func (x *Xkcdpwd) Run() int {
 	_ = flags.Bool("v", false, "be more verbose")
 
 	// register global flags
+	flags.StringVar(&lang, "lang", "", "language to use, a valid IETF language tag (default: en)")
 	flags.StringVar(&separator, "separator", " ", "passphrase separator")
 	flags.BoolVar(&showVersion, "version", false, "show version information")
 	flags.UintVar(&wordCount, "words", 4, "the number of words in each passphrase")
@@ -112,7 +114,12 @@ func (x *Xkcdpwd) Run() int {
 		return errorExitCode
 	}
 
-	d := dict.GetDict("en")
+	// Source lang from the environment, but prefer the command line if set
+	if envLang, ok := os.LookupEnv("LANG"); ok && lang == "" {
+		lang = envLang
+	}
+	d := dict.GetDict(lang)
+
 	l := big.NewInt(int64(d.Length() - 1))
 	words := make([]string, wordCount, wordCount)
 	for i := 0; i < 10; i++ {

@@ -21,6 +21,8 @@ import (
 	"io"
 	"strings"
 
+	"golang.org/x/text/language"
+
 	"github.com/wfscheper/xkcdpwd/internal/langs"
 )
 
@@ -32,7 +34,7 @@ type Dictionary struct {
 
 // Length returns the number of words in the Dictionary.
 func (d *Dictionary) Length() int {
-	if d.length == nil {
+	if d.length == nil && d.words != nil {
 		l := len(d.words)
 		d.length = &l
 	}
@@ -73,10 +75,15 @@ func NewDictionary(r io.Reader) *Dictionary {
 	return d
 }
 
+var matcher = language.NewMatcher([]language.Tag{
+	language.English,
+})
+
 // GetDict returns the dictionary associated with the language code lang.
 func GetDict(lang string) *Dictionary {
-	switch lang {
-	case "en":
+	tag, _ := language.MatchStrings(matcher, lang)
+	switch tag {
+	case language.English:
 		data := langs.MustAsset("languages/en")
 		return NewDictionary(bytes.NewBuffer(data))
 	default:

@@ -104,6 +104,12 @@ func TestWord(t *testing.T) {
 func TestGetDict(t *testing.T) {
 	is := assert.New(t)
 	d := GetDict("en")
-	is.Equal(d.Word(0), "able")
-	is.Nil(GetDict("foo"))
+	if is.NotNil(d) {
+		is.Equal(d.Word(0), "able")
+	}
+	// matcher will try *really* hard to give a match
+	d = GetDict("foo")
+	if is.NotNil(d) {
+		is.Equal(d.Word(0), "able")
+	}
 }
