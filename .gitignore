@@ -32,3 +32,7 @@ tags
 
 
 # End of https://www.gitignore.io/api/go,vim
+
+# go generate'd files
+/internal/langs/languages.go
+/test/
