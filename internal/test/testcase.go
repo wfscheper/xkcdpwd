@@ -52,6 +52,7 @@ func NewCase(t *testing.T, dir, name string) *Case {
 		t.Fatal(err)
 	}
 	if c.Separator == nil {
+		t.Log("setting default separator ' '")
 		sep := " "
 		c.Separator = &sep
 	}
@@ -73,7 +74,12 @@ func (c *Case) CompareOutput(stdout string) {
 			}
 			if c.Words != nil {
 				for line, passphrase := range passphrases {
-					words := strings.Split(passphrase, *c.Separator)
+					var words []string
+					if *c.Separator == "" {
+						words = []string{passphrase}
+					} else {
+						words = strings.Split(passphrase, *c.Separator)
+					}
 					if uint(len(words)) != *c.Words {
 						c.t.Errorf("stdout was not as expected\nWANT:\n%d words\nGOT:\n%d words in line %d\n\n%s",
 							*c.Words, len(words), line+1, stdout)

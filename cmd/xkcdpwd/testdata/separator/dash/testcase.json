@@ -1,0 +1,8 @@
+{
+    "commands": [
+        ["-separator", "-"]
+    ],
+    "passphrases": 10,
+    "words": 4,
+    "separator": "-"
+}
