@@ -71,6 +71,7 @@ type Xkcdpwd struct {
 func (x *Xkcdpwd) Run() int {
 	var (
 		// flags
+		separator   string
 		showVersion bool
 	)
 
@@ -79,6 +80,7 @@ func (x *Xkcdpwd) Run() int {
 	_ = flags.Bool("v", false, "be more verbose")
 
 	// register global flags
+	flags.StringVar(&separator, "separator", " ", "passphrase separator")
 	flags.BoolVar(&showVersion, "version", false, "show version information")
 
 	// wrap stdout and stderr in loggers
@@ -101,6 +103,13 @@ func (x *Xkcdpwd) Run() int {
 `, appName, version, buildDate, commitHash, runtime.Version(), runtime.Compiler, runtime.GOOS, runtime.GOARCH)
 		return successExitCode
 	}
+
+	// check that separator is valid
+	if !checkSeparator(separator) {
+		errLogger.Printf("error: invalid separator '%s'\n", separator)
+		return errorExitCode
+	}
+
 	d := dict.GetDict("en")
 	l := big.NewInt(int64(d.Length() - 1))
 	words := make([]string, 4, 4)
@@ -113,9 +122,18 @@ func (x *Xkcdpwd) Run() int {
 			}
 			words[j] = d.Word(int(idx.Int64()))
 		}
-		outLogger.Println(strings.Join(words, " "))
+		outLogger.Println(strings.Join(words, separator))
 	}
 	return successExitCode
+}
+
+func checkSeparator(sep string) bool {
+	switch sep {
+	case "", " ", ".", "-", "_", "=":
+		return true
+	default:
+		return false
+	}
 }
 
 func setUsage(logger *log.Logger, fs *flag.FlagSet) {
