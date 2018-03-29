@@ -1,0 +1,9 @@
+Usage: xkcdpwd [OPTIONS]
+
+xkcdpwd is a passphrase generator based on XKCD comic #936
+
+Flags:
+
+  -v        be more verbose (default: false)
+  -version  show version information (default: false)
+

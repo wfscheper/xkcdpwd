@@ -11,10 +11,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package test
 
-import "github.com/wfscheper/xkcdpwd/internal/cmd"
+import (
+	"flag"
+	"runtime"
+)
 
-func main() {
-	cmd.Execute()
+var (
+	// ExeSuffix is the suffix of executable files (.exe on Windows).
+	ExeSuffix string
+	// Verbose controls logging of test commands.
+	Verbose = flag.Bool("logs", false, "log stdin/stdout of test commands")
+	// UpdateGolden controls updating test fixtures.
+	UpdateGolden = flag.Bool("update", false, "update golden files")
+)
+
+func init() {
+	switch runtime.GOOS {
+	case "windows":
+		ExeSuffix = ".exe"
+	}
 }

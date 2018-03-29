@@ -1,12 +1,29 @@
+env:
+  global:
+  - CC_TEST_REPORTER_ID=87fb89369423b4165e6a89e7e26570dc9cfbd305201b848cb2124887a65d571d
+
 language: go
 sudo: false
 go:
 - 1.10.x
 - master
+
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
+
 install:
 - go get -v github.com/mattn/goveralls
 - go get -v github.com/golang/dep
 - make vendor
+
 script:
-- make tests all
-- $GOPATH/bin/goveralls -service=travis-ci
+- make
+- make test-coverage
+- $GOPATH/bin/goveralls -coverprofile=test/cover.out -service=travis-ci
+
+after_script:
+- pushd ./test
+- ../cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+- popd

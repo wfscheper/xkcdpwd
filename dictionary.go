@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dictionary
+package xkcdpwd
 
 import (
 	"bufio"
@@ -66,14 +66,4 @@ func NewDictionary(r io.Reader) *Dictionary {
 		}
 	}
 	return d
-}
-
-// GetDict returns the dictionary associated with the language code lang.
-func GetDict(lang string) *Dictionary {
-	switch lang {
-	case "en":
-		return &en
-	default:
-		return nil
-	}
 }
