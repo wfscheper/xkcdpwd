@@ -4,6 +4,7 @@ xkcdpwd is a passphrase generator based on XKCD comic #936
 
 Flags:
 
+  -lang       language to use, a valid IETF language tag (default: en)
   -separator  passphrase separator (default:  )
   -v          be more verbose (default: false)
   -version    show version information (default: false)
