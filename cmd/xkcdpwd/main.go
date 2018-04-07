@@ -39,9 +39,6 @@ var (
 	version    = "deveL"
 	buildDate  string
 	commitHash string
-
-	// flags
-	showVersion bool
 )
 
 func main() {
@@ -72,6 +69,11 @@ type Xkcdpwd struct {
 
 // Run executes xkcdpwd
 func (x *Xkcdpwd) Run() int {
+	var (
+		// flags
+		showVersion bool
+	)
+
 	flags := flag.NewFlagSet(appName, flag.ContinueOnError)
 	flags.SetOutput(x.Stderr)
 	_ = flags.Bool("v", false, "be more verbose")
