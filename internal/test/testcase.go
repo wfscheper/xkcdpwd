@@ -70,10 +70,9 @@ func (c *Case) CompareOutput(stdout string) {
 func (c *Case) CompareError(errIn error, stderr string) {
 	var expected string
 	if expectedData, err := ioutil.ReadFile(filepath.Join(c.rootPath, "stderr.txt")); err != nil {
-		if os.IsNotExist(err) {
-			return
+		if !os.IsNotExist(err) {
+			panic(err)
 		}
-		panic(err)
 	} else {
 		expected = string(expectedData)
 	}
