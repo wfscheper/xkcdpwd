@@ -8,7 +8,7 @@ You can contribute in many ways:
 
 ### Report Bugs
 
-Report bugs at https://github.com/wfscheper/xkcdpwd/issues.
+Report bugs [on Github](https://github.com/wfscheper/xkcdpwd/issues).
 
 If you are reporting a bug, please include:
 
@@ -34,7 +34,7 @@ articles, and such.
 
 ### Submit Feedback
 
-The best way to send feedback is to file an issue at https://github.com/wfscheper/xkcdpwd/issues.
+The best way to send feedback is to file an issue [on Github](https://github.com/wfscheper/xkcdpwd/issues).
 
 If you are proposing a feature:
 
