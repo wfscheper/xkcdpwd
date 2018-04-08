@@ -22,7 +22,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jlucktay/xkcdpwd/internal/test"
+	"github.com/wfscheper/xkcdpwd/internal/test"
 )
 
 // Entry point for running integration tests.

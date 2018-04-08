@@ -26,7 +26,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	dict "github.com/jlucktay/xkcdpwd"
+	dict "github.com/wfscheper/xkcdpwd"
 )
 
 const (
