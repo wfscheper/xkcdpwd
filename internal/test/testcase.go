@@ -81,7 +81,7 @@ func (c *Case) CompareError(errIn error, stderr string) {
 	if expectError && gotError {
 		switch matches := strings.Count(stderr, expected); matches {
 		case 0:
-			c.t.Errorf("stderror did not contain the expectecd error\nWANT:\n%s\nGOT:\n%s\n", expected, stderr)
+			c.t.Errorf("stderror did not contain the expected error\nWANT:\n%s\nGOT:\n%s\n", expected, stderr)
 		case 1:
 		default:
 			c.t.Errorf("expected error '%s' occured %d times in stderr %s", expected, matches, stderr)
