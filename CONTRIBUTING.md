@@ -43,7 +43,7 @@ If you are proposing a feature:
 * Remember that this is a volunteer-driven project, and that contributions
   are welcome :)
 
-## Get Started!
+## Get Started
 
 Ready to contribute? Here's how to set up `xkcdpwd` for local development.
 
@@ -70,8 +70,7 @@ Ready to contribute? Here's how to set up `xkcdpwd` for local development.
 
 7. Submit a pull request through the GitHub website.
 
-Pull Request Guidelines
------------------------
+### Pull Request Guidelines
 
 Before you submit a pull request, check that it meets these guidelines:
 
