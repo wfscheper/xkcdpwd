@@ -20,7 +20,7 @@ package xkcdpwd
 import (
 	"bytes"
 
-	"github.com/wfscheper/xkcdpwd/internal/langs"
+	"github.com/jlucktay/xkcdpwd/internal/langs"
 )
 
 // GetDict returns the dictionary associated with the language code lang.
