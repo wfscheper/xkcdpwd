@@ -6,4 +6,4 @@
 
 ## Contributors
 
-None yet. Why not be the first?
+- James Lucktaylor [jlucktay](https://github.com/jlucktay)
