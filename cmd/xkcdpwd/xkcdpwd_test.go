@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jlucktay/xkcdpwd/internal/test"
+	"github.com/wfscheper/xkcdpwd/internal/test"
 )
 
 // The TestMain function creates a xkcdpwd command for testing purposes and
