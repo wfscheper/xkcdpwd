@@ -72,6 +72,7 @@ func (x *Xkcdpwd) Run() int {
 	var (
 		// flags
 		showVersion bool
+		wordCount   uint
 	)
 
 	flags := flag.NewFlagSet(appName, flag.ContinueOnError)
@@ -80,6 +81,7 @@ func (x *Xkcdpwd) Run() int {
 
 	// register global flags
 	flags.BoolVar(&showVersion, "version", false, "show version information")
+	flags.UintVar(&wordCount, "words", 4, "the number of words in each passphrase")
 
 	// wrap stdout and stderr in loggers
 	outLogger := log.New(x.Stdout, "", 0)
@@ -103,9 +105,9 @@ func (x *Xkcdpwd) Run() int {
 	}
 	d := dict.GetDict("en")
 	l := big.NewInt(int64(d.Length() - 1))
-	words := make([]string, 4, 4)
+	words := make([]string, wordCount, wordCount)
 	for i := 0; i < 10; i++ {
-		for j := 0; j < 4; j++ {
+		for j := uint(0); j < wordCount; j++ {
 			idx, err := rand.Int(rand.Reader, l)
 			if err != nil {
 				errLogger.Println("error: cannot generate random words:", err)
