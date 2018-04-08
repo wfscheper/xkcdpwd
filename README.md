@@ -11,8 +11,8 @@ Alternatively, or on Windows, download the go source or binary from [Golang.org]
 Running it then should be as simple as:
 
 ```console
-$ make
-$ bin/xkcdpwd
+make
+bin/xkcdpwd
 ```
 
 ## Testing
