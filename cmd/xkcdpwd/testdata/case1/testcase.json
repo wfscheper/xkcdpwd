@@ -1,5 +1,7 @@
 {
     "commands": [
         []
-    ]
+    ],
+    "passphrases": 10,
+    "words": 4
 }
