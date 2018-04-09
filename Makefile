@@ -18,7 +18,7 @@ override TAGS := $(and $(TAGS),-tags $(TAGS))
 GOLDFLAGS  := '-X main.version=$(VERSION) -X main.buildDate=$(DATE) -X main.commitHash=$(COMMIT)'
 GO      = go
 GOBUILD = $(GO) build -v
-GOTEST  = $(GO) test -tags test
+GOTEST  = $(GO) test
 GODOC   = godoc
 GOFMT   = gofmt
 DOCKER  = docker

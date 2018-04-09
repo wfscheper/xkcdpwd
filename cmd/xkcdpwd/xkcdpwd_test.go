@@ -18,7 +18,7 @@ import (
 // deletes it after the tests have been run.
 // Most of this is taken from https://github.com/golang/dep/blob/master/cmd/dep/dep_test.go and reused here.
 func TestMain(m *testing.M) {
-	args := []string{"build", "-tags", "test", "-o", "testxkcdpwd" + test.ExeSuffix}
+	args := []string{"build", "-o", "testxkcdpwd" + test.ExeSuffix}
 	out, err := exec.Command("go", args...).CombinedOutput()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "building testxkcdpwd failed: %v\n%s", err, out)
