@@ -26,11 +26,14 @@ import (
 
 // Case loads a testdata.json test configuration and executes that test.
 type Case struct {
-	t        *testing.T
-	name     string
-	rootPath string
-	Commands [][]string `json:"commands"`
-	Skip     bool       `json:"skip"`
+	t           *testing.T
+	name        string
+	rootPath    string
+	Commands    [][]string `json:"commands"`
+	Skip        bool       `json:"skip"`
+	Passphrases *uint      `json:"passphrases,omitempty"`
+	Words       *uint      `json:"words,omitempty"`
+	Separator   *string    `json:"separator,omitempty"`
 }
 
 // NewCase returns a Case.
@@ -48,6 +51,10 @@ func NewCase(t *testing.T, dir, name string) *Case {
 	if err := json.Unmarshal(data, c); err != nil {
 		t.Fatal(err)
 	}
+	if c.Separator == nil {
+		sep := " "
+		c.Separator = &sep
+	}
 	return c
 }
 
@@ -56,6 +63,23 @@ func (c *Case) CompareOutput(stdout string) {
 	expected, err := ioutil.ReadFile(filepath.Join(c.rootPath, "stdout.txt"))
 	if err != nil {
 		if os.IsNotExist(err) {
+			// check against number of passphrases generated and number of words per passpharse
+			passphrases := strings.Split(strings.Trim(stdout, "\n"), "\n")
+			if c.Passphrases != nil {
+				if len(passphrases) != int(*c.Passphrases) {
+					c.t.Errorf("stdout was not as expected\nWANT:\n%d passphrases\nGOT:\n%d passphrases\n\n%s",
+						*c.Passphrases, len(passphrases), stdout)
+				}
+			}
+			if c.Words != nil {
+				for line, passphrase := range passphrases {
+					words := strings.Split(passphrase, *c.Separator)
+					if uint(len(words)) != *c.Words {
+						c.t.Errorf("stdout was not as expected\nWANT:\n%d words\nGOT:\n%d words in line %d\n\n%s",
+							*c.Words, len(words), line+1, stdout)
+					}
+				}
+			}
 			return
 		}
 		panic(err)
