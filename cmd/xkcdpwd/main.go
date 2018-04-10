@@ -15,12 +15,10 @@ package main
 
 import (
 	"bytes"
-	"crypto/rand"
 	"flag"
 	"fmt"
 	"io"
 	"log"
-	"math/big"
 	"os"
 	"runtime"
 	"strings"
@@ -119,17 +117,11 @@ func (x *Xkcdpwd) Run() int {
 		lang = envLang
 	}
 	d := dict.GetDict(lang)
-
-	l := big.NewInt(int64(d.Length() - 1))
-	words := make([]string, wordCount, wordCount)
 	for i := 0; i < 10; i++ {
-		for j := uint(0); j < wordCount; j++ {
-			idx, err := rand.Int(rand.Reader, l)
-			if err != nil {
-				errLogger.Println("error: cannot generate random words:", err)
-				return errorExitCode
-			}
-			words[j] = d.Word(int(idx.Int64()))
+		words, err := d.Words(int(wordCount))
+		if err != nil {
+			errLogger.Printf("error: %v\n", err)
+			return errorExitCode
 		}
 		outLogger.Println(strings.Join(words, separator))
 	}

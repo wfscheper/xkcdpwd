@@ -18,7 +18,11 @@ package xkcdpwd
 import (
 	"bufio"
 	"bytes"
+	"crypto/rand"
+	"fmt"
 	"io"
+	"math"
+	"math/big"
 	"strings"
 
 	"golang.org/x/text/language"
@@ -30,25 +34,6 @@ import (
 type Dictionary struct {
 	words  []string
 	length *int
-}
-
-// Length returns the number of words in the Dictionary.
-func (d *Dictionary) Length() int {
-	if d.length == nil && d.words != nil {
-		l := len(d.words)
-		d.length = &l
-	}
-	return *d.length
-}
-
-// Word returns the word at index idx. If idx is less than 0, or greater than
-// or equal to the number of words in the dictionary, then Word returns an
-// empty string.
-func (d *Dictionary) Word(idx int) string {
-	if idx < 0 || idx >= d.Length() {
-		return ""
-	}
-	return d.words[idx]
 }
 
 // NewDictionary scans r line-by-line and returns a Dictionary. Each line in r
@@ -69,10 +54,88 @@ func NewDictionary(r io.Reader) *Dictionary {
 			w = ""
 		}
 		if w != "" {
-			d.words = append(d.words, w)
+			// Insert words according to length, so that we can more easily
+			// filter them later
+			d.words = insertByLength(d.words, w)
 		}
 	}
 	return d
+}
+
+func insertByLength(s []string, w string) []string {
+	if len(s) == 0 {
+		// first word, append it
+		return append(s, w)
+	}
+	i, j := 0, len(s)-1
+	for {
+		switch {
+		case len(w) < len(s[i]):
+			if i == 0 {
+				return append([]string{w}, s...)
+			}
+			return insert(s, w, i)
+		case len(w) > len(s[j]):
+			if j == len(s)-1 {
+				return append(s, w)
+			}
+			return insert(s, w, j)
+		case i >= j:
+			return append(s, w)
+		default:
+			i++
+			j--
+		}
+	}
+}
+
+func insert(s []string, w string, i int) []string {
+	s = append(s, "")
+	copy(s[i+1:], s[i:])
+	s[i] = w
+	return s
+}
+
+// Entropy returns the number of bits of entropy the current dictionary configuration can support.
+func (d *Dictionary) Entropy(n int) float64 {
+	return float64(n) * math.Log2(float64(d.Length()))
+}
+
+// Length returns the number of words in the Dictionary.
+func (d *Dictionary) Length() int {
+	if d.length == nil {
+		l := len(d.words)
+		d.length = &l
+	}
+	return *d.length
+}
+
+// Word returns the word at index idx. If idx is less than 0, or greater than
+// or equal to the number of words in the dictionary, then Word returns an
+// empty string.
+func (d *Dictionary) Word(idx int) string {
+	if idx < 0 || idx >= d.Length() {
+		return ""
+	}
+	return d.words[idx]
+}
+
+// Words returns a slice of n randomly chosen words. If the dictionary cannot
+// support the minimum entropy, then an error is returned.
+func (d *Dictionary) Words(n int) ([]string, error) {
+	if d.Entropy(n) < 30.0 {
+		return nil, fmt.Errorf("dictionary cannot support more than 30 bits of entropy")
+	}
+	dictLengh := big.NewInt(int64(d.Length() - 1))
+	words := make([]string, n, n)
+	for i := 0; i < n; i++ {
+		idx, err := rand.Int(rand.Reader, dictLengh)
+		if err != nil {
+			return nil, fmt.Errorf("cannot generate random words: %s", err)
+		}
+		words[i] = d.Word(int(idx.Int64()))
+	}
+	return words, nil
 }
 
 var matcher = language.NewMatcher([]language.Tag{

@@ -15,6 +15,8 @@ package xkcdpwd
 
 import (
 	"bytes"
+	"math/rand"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -26,6 +28,33 @@ func TestNewDictionary(t *testing.T) {
 	d := NewDictionary(r)
 	if is.Len(d.words, 1) {
 		is.Equal([]string{"word"}, d.words)
+	}
+}
+
+func TestNewDictionaryOrder(t *testing.T) {
+	is := assert.New(t)
+	tests := []struct {
+		input    []string
+		expected []string
+	}{
+		{[]string{"f"}, []string{"f"}},
+		{[]string{"f", "b"}, []string{"f", "b"}},
+		{[]string{"b", "fo"}, []string{"b", "fo"}},
+		{[]string{"fo", "b"}, []string{"b", "fo"}},
+		{[]string{"b", "foo"}, []string{"b", "foo"}},
+		{[]string{"foo", "b"}, []string{"b", "foo"}},
+		{[]string{"b", "fo", "bar"}, []string{"b", "fo", "bar"}},
+		{[]string{"b", "bar", "fo"}, []string{"b", "fo", "bar"}},
+		{[]string{"fo", "b", "bar"}, []string{"b", "fo", "bar"}},
+		{[]string{"fo", "bar", "b"}, []string{"b", "fo", "bar"}},
+		{[]string{"bar", "b", "fo"}, []string{"b", "fo", "bar"}},
+		{[]string{"bar", "fo", "b"}, []string{"b", "fo", "bar"}},
+		{[]string{"f", "g", "h", "i"}, []string{"f", "g", "h", "i"}},
+	}
+	for i, test := range tests {
+		expected := strings.Join(test.input, "\n")
+		actual := NewDictionary(bytes.NewBufferString(expected))
+		is.Equalf(test.expected, actual.words, "%d: expected %v, got %v", i, test.expected, actual.words)
 	}
 }
 
@@ -111,5 +140,42 @@ func TestGetDict(t *testing.T) {
 	d = GetDict("foo")
 	if is.NotNil(d) {
 		is.Equal(d.Word(0), "able")
+	}
+}
+
+func BenchmarkNewDictionaySorted(b *testing.B) {
+	data := make([]string, 5000, 5000)
+	length := 3
+	wordsPerLength := len(data) / 10
+	for i := 0; i < len(data); i++ {
+		data[i] = strings.Repeat("1", length+(i/wordsPerLength))
+	}
+	benchmarkNewDictionary(b, data)
+}
+
+func BenchmarkNewDictionayReversed(b *testing.B) {
+	data := make([]string, 5000, 5000)
+	length := 12
+	wordsPerLength := len(data) / 10
+	for i := 0; i < len(data); i++ {
+		data[i] = strings.Repeat("1", length-(i/wordsPerLength))
+	}
+	benchmarkNewDictionary(b, data)
+}
+
+func BenchmarkNewDictionayRandom(b *testing.B) {
+	data := make([]string, 5000, 5000)
+	for i := 0; i < len(data); i++ {
+		length := rand.Intn(11) + 1
+		data[i] = strings.Repeat("1", length)
+	}
+	benchmarkNewDictionary(b, data)
+}
+
+func benchmarkNewDictionary(b *testing.B, words []string) {
+	r := bytes.NewBufferString(strings.Join(words, "\n"))
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		NewDictionary(r)
 	}
 }
