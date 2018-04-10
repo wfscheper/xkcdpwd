@@ -1,9 +1,10 @@
 
-# Created by https://www.gitignore.io/api/go,vim
+# Created by https://www.gitignore.io/api/go,vim,visualstudiocode
 
 ### Go ###
 # Binaries for programs and plugins
 *.exe
+*.exe~
 *.dll
 *.so
 *.dylib
@@ -13,10 +14,6 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
-
-# Ignore build output and vendor directories
-/bin/
-/vendor/
 
 ### Vim ###
 # swap
@@ -30,8 +27,15 @@ Session.vim
 # auto-generated tag files
 tags
 
+### VisualStudioCode ###
+/.vscode/
+.history
 
-# End of https://www.gitignore.io/api/go,vim
+# End of https://www.gitignore.io/api/go,vim,visualstudiocode
+
+# Ignore build output and vendor directories
+/bin/
+/vendor/
 
 # go generate'd files
 /internal/langs/languages.go

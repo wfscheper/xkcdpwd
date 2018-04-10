@@ -1,0 +1,9 @@
+{
+    "commands": [
+        [
+            "-words=3"
+        ]
+    ],
+    "passphrases": 10,
+    "words": 3
+}
