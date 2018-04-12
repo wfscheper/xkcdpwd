@@ -15,24 +15,72 @@ package xkcdpwd
 
 import (
 	"bytes"
+	"fmt"
 	"math/rand"
+	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestNewDictionary(t *testing.T) {
-	is := assert.New(t)
-	r := bytes.NewBufferString("word\n")
-	d := NewDictionary(r)
-	if is.Len(d.words, 1) {
-		is.Equal([]string{"word"}, d.words)
+	t.Parallel()
+	tests := []struct {
+		data                  string
+		expectedWords         []string
+		expectedMinWordLength int
+		expectedMaxWordLength int
+	}{
+		{
+			data:                  "word",
+			expectedWords:         []string{"word"},
+			expectedMaxWordLength: 4,
+			expectedMinWordLength: 4,
+		},
+		{
+			data:                  "word\n",
+			expectedWords:         []string{"word"},
+			expectedMaxWordLength: 4,
+			expectedMinWordLength: 4,
+		},
+		{
+			data:                  "word\nanother",
+			expectedWords:         []string{"word", "another"},
+			expectedMaxWordLength: 7,
+			expectedMinWordLength: 4,
+		},
+		{
+			data:                  "word\nanother\n",
+			expectedWords:         []string{"word", "another"},
+			expectedMaxWordLength: 7,
+			expectedMinWordLength: 4,
+		},
+		{
+			data:                  "word\n# comment\n  # comment2\nanother # inline\n",
+			expectedWords:         []string{"word", "another"},
+			expectedMaxWordLength: 7,
+			expectedMinWordLength: 4,
+		},
+	}
+	for idx, test := range tests {
+		r := bytes.NewBufferString(test.data)
+		d := NewDictionary(r)
+		t.Run(fmt.Sprint(idx+1), func(t *testing.T) {
+			if reflect.DeepEqual(test.expectedWords, d.words) {
+				if test.expectedMaxWordLength != d.MaxWordLength() {
+					t.Errorf("expected max word length %d, got %d", test.expectedMaxWordLength, d.MaxWordLength())
+				}
+				if test.expectedMinWordLength != d.MinWordLength() {
+					t.Errorf("expected min word length %d, got %d", test.expectedMinWordLength, d.MinWordLength())
+				}
+			} else {
+				t.Errorf("expected %v words, got %v", test.expectedWords, d.words)
+			}
+		})
 	}
 }
 
 func TestNewDictionaryOrder(t *testing.T) {
-	is := assert.New(t)
+	t.Parallel()
 	tests := []struct {
 		input    []string
 		expected []string
@@ -50,49 +98,96 @@ func TestNewDictionaryOrder(t *testing.T) {
 		{[]string{"bar", "b", "fo"}, []string{"b", "fo", "bar"}},
 		{[]string{"bar", "fo", "b"}, []string{"b", "fo", "bar"}},
 		{[]string{"f", "g", "h", "i"}, []string{"f", "g", "h", "i"}},
+		{[]string{"1", "12", "1234", "1234", "12345"}, []string{"1", "12", "1234", "1234", "12345"}},
 	}
-	for i, test := range tests {
-		expected := strings.Join(test.input, "\n")
-		actual := NewDictionary(bytes.NewBufferString(expected))
-		is.Equalf(test.expected, actual.words, "%d: expected %v, got %v", i, test.expected, actual.words)
+	for idx, test := range tests {
+		t.Run(fmt.Sprint(idx+1), func(t *testing.T) {
+			input := strings.Join(test.input, "\n")
+			actual := NewDictionary(bytes.NewBufferString(input))
+			if !reflect.DeepEqual(test.expected, actual.words) {
+				t.Errorf("expected %v, got %v", test.expected, actual.words)
+			}
+		})
 	}
 }
 
 func TestLength(t *testing.T) {
-	is := assert.New(t)
-	d := Dictionary{words: []string{"word"}}
-	is.Nil(d.length)
-	is.Equal(1, d.Length())
-	is.Equal(1, *d.length)
+	d := NewDictionary(bytes.NewBufferString("word"))
+	if d.Length() != 1 {
+		t.Error("expected length 1")
+	}
 
-	d = Dictionary{words: []string{"another", "word"}}
-	is.Nil(d.length)
-	is.Equal(2, d.Length())
-	is.Equal(2, *d.length)
-}
-
-func TestNewDictionaryComment(t *testing.T) {
-	r := bytes.NewBufferString("word\n# comment\n  # comment2\nanother # inline\n")
-	d := NewDictionary(r)
-	if assert.Len(t, d.words, 2) {
-		assert.Equal(t, []string{"word", "another"}, d.words)
+	d = NewDictionary(bytes.NewBufferString("word\nanother"))
+	if d.Length() != 2 {
+		t.Error("expected length 2")
 	}
 }
 
-func TestNewDictionaryNoTrailingNewLine(t *testing.T) {
-	r := bytes.NewBufferString("word")
-	d := NewDictionary(r)
-	if assert.Len(t, d.words, 1) {
-		assert.Equal(t, []string{"word"}, d.words)
+func TestSetMaxWordLength(t *testing.T) {
+	tests := []struct {
+		maxLength      int
+		expectedStop   int
+		expectedLength int
+	}{
+		{maxLength: -10, expectedStop: 5, expectedLength: 5},
+		{maxLength: -1, expectedStop: 5, expectedLength: 5},
+		{maxLength: 0, expectedStop: 5, expectedLength: 5},
+		{maxLength: 1, expectedStop: 1, expectedLength: 1},
+		{maxLength: 2, expectedStop: 2, expectedLength: 2},
+		{maxLength: 3, expectedStop: 2, expectedLength: 2},
+		{maxLength: 4, expectedStop: 4, expectedLength: 4},
+		{maxLength: 5, expectedStop: 5, expectedLength: 5},
+		{maxLength: 6, expectedStop: 5, expectedLength: 5},
+		{maxLength: 16, expectedStop: 5, expectedLength: 5},
 	}
-	r = bytes.NewBufferString("word\nanother")
-	d = NewDictionary(r)
-	if assert.Len(t, d.words, 2) {
-		assert.Equal(t, []string{"word", "another"}, d.words)
+	d := NewDictionary(bytes.NewBufferString("1\n12\n1234\n1234\n12345\n"))
+	for idx, test := range tests {
+		d.SetMaxWordLength(test.maxLength)
+		if test.expectedStop == d.stop {
+			if test.expectedLength != d.Length() {
+				t.Errorf("%d: expected length %d, got %d", idx+1, test.expectedLength, d.Length())
+			}
+		} else {
+			t.Errorf("%d: expected stop %d, got %d", idx+1, test.expectedStop, d.stop)
+		}
+	}
+}
+
+func TestSetMinWordLength(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		minLength      int
+		expectedStart  int
+		expectedLength int
+	}{
+		{minLength: -10, expectedStart: 0, expectedLength: 5},
+		{minLength: -1, expectedStart: 0, expectedLength: 5},
+		{minLength: 0, expectedStart: 0, expectedLength: 5},
+		{minLength: 1, expectedStart: 0, expectedLength: 5},
+		{minLength: 2, expectedStart: 1, expectedLength: 4},
+		{minLength: 3, expectedStart: 2, expectedLength: 3},
+		{minLength: 4, expectedStart: 2, expectedLength: 3},
+		{minLength: 5, expectedStart: 4, expectedLength: 1},
+		{minLength: 6, expectedStart: 5, expectedLength: 0},
+		{minLength: 16, expectedStart: 5, expectedLength: 0},
+	}
+	d := NewDictionary(bytes.NewBufferString("1\n12\n1234\n1234\n12345\n"))
+	for idx, test := range tests {
+		t.Run(fmt.Sprint(idx+1), func(t *testing.T) {
+			d.SetMinWordLength(test.minLength)
+			if test.expectedStart == d.start {
+				if test.expectedLength != d.Length() {
+					t.Errorf("expected length %d, got %d", test.expectedLength, d.Length())
+				}
+			} else {
+				t.Errorf("expected start %d, got %d", test.expectedStart, d.start)
+			}
+		})
 	}
 }
 
 func TestWord(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		Index    int
 		Expected string
@@ -122,24 +217,117 @@ func TestWord(t *testing.T) {
 			Expected: "",
 		},
 	}
-	is := assert.New(t)
-	d := Dictionary{words: []string{"word", "another"}}
+	d := NewDictionary(bytes.NewBufferString("word\nanother"))
 	for idx, test := range tests {
-		actual := d.Word(test.Index)
-		is.Equalf(test.Expected, actual, "%d: Expected '%s', got '%s'", idx, test.Expected, actual)
+		t.Run(fmt.Sprint(idx+1), func(t *testing.T) {
+			actual := d.Word(test.Index)
+			if test.Expected != actual {
+				t.Errorf("%d: Expected '%s', got '%s'", idx, test.Expected, actual)
+			}
+		})
+	}
+}
+
+func TestWordWithMax(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		Index    int
+		Expected string
+	}{
+		{
+			Index:    0,
+			Expected: "word",
+		},
+		{
+			Index:    1,
+			Expected: "",
+		},
+		{
+			Index:    -1,
+			Expected: "",
+		},
+		{
+			Index:    -15,
+			Expected: "",
+		},
+		{
+			Index:    2,
+			Expected: "",
+		},
+		{
+			Index:    303,
+			Expected: "",
+		},
+	}
+	d := NewDictionary(bytes.NewBufferString("word\nanother"))
+	d.SetMaxWordLength(5)
+	for idx, test := range tests {
+		t.Run(fmt.Sprint(idx+1), func(t *testing.T) {
+			actual := d.Word(test.Index)
+			if test.Expected != actual {
+				t.Errorf("%d: Expected '%s', got '%s'", idx, test.Expected, actual)
+			}
+		})
+	}
+}
+
+func TestWordWithMin(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		Index    int
+		Expected string
+	}{
+		{
+			Index:    0,
+			Expected: "another",
+		},
+		{
+			Index:    1,
+			Expected: "",
+		},
+		{
+			Index:    -1,
+			Expected: "",
+		},
+		{
+			Index:    -15,
+			Expected: "",
+		},
+		{
+			Index:    2,
+			Expected: "",
+		},
+		{
+			Index:    303,
+			Expected: "",
+		},
+	}
+	d := NewDictionary(bytes.NewBufferString("word\nanother"))
+	d.SetMinWordLength(5)
+	for idx, test := range tests {
+		t.Run(fmt.Sprint(idx+1), func(t *testing.T) {
+			actual := d.Word(test.Index)
+			if test.Expected != actual {
+				t.Errorf("%d: Expected '%s', got '%s'", idx, test.Expected, actual)
+			}
+		})
 	}
 }
 
 func TestGetDict(t *testing.T) {
-	is := assert.New(t)
 	d := GetDict("en")
-	if is.NotNil(d) {
-		is.Equal(d.Word(0), "able")
+	actual := d.Word(0)
+	if d != nil {
+		if "able" != actual {
+			t.Errorf("expected 'able', got '%s'", actual)
+		}
 	}
 	// matcher will try *really* hard to give a match
 	d = GetDict("foo")
-	if is.NotNil(d) {
-		is.Equal(d.Word(0), "able")
+	if d != nil {
+		if "able" != actual {
+			t.Errorf("expected 'able', got '%s'", actual)
+		}
 	}
 }
 

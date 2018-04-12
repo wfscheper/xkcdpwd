@@ -1,0 +1,5 @@
+{
+    "commands": [
+        ["-min-length", "16"]
+    ]
+}
