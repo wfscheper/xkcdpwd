@@ -1,0 +1,1 @@
+error: dictionary cannot support more than 30 bits of entropy

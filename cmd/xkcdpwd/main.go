@@ -69,10 +69,12 @@ type Xkcdpwd struct {
 func (x *Xkcdpwd) Run() int {
 	var (
 		// flags
-		lang        string
-		separator   string
-		showVersion bool
-		wordCount   uint
+		lang          string
+		maxWordLength int
+		minWordLength int
+		separator     string
+		showVersion   bool
+		wordCount     uint
 	)
 
 	flags := flag.NewFlagSet(appName, flag.ContinueOnError)
@@ -81,6 +83,8 @@ func (x *Xkcdpwd) Run() int {
 
 	// register global flags
 	flags.StringVar(&lang, "lang", "", "language to use, a valid IETF language tag (default: en)")
+	flags.IntVar(&maxWordLength, "max-length", 0, "maximum word length")
+	flags.IntVar(&minWordLength, "min-length", 0, "minimum word length")
 	flags.StringVar(&separator, "separator", " ", "passphrase separator")
 	flags.BoolVar(&showVersion, "version", false, "show version information")
 	flags.UintVar(&wordCount, "words", 4, "the number of words in each passphrase")
@@ -117,6 +121,8 @@ func (x *Xkcdpwd) Run() int {
 		lang = envLang
 	}
 	d := dict.GetDict(lang)
+	d.SetMaxWordLength(maxWordLength)
+	d.SetMinWordLength(minWordLength)
 	for i := 0; i < 10; i++ {
 		words, err := d.Words(int(wordCount))
 		if err != nil {
