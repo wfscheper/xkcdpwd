@@ -35,8 +35,10 @@ const minEntropy = 30.0
 
 // Dictionary wraps a word list and its length.
 type Dictionary struct {
+	capitalize    string
 	minWordLength int
 	maxWordLength int
+	randReader    io.Reader
 	words         []string
 	start         int
 	stop          int
@@ -46,7 +48,7 @@ type Dictionary struct {
 // should be a word in the dictionary. Lines beginning with a #-character are
 // considred comments and are ignored.
 func NewDictionary(r io.Reader) *Dictionary {
-	d := &Dictionary{words: make([]string, 0, 10)}
+	d := &Dictionary{words: []string{}, randReader: rand.Reader}
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		w := scanner.Text()
@@ -60,8 +62,6 @@ func NewDictionary(r io.Reader) *Dictionary {
 			w = ""
 		}
 		if w != "" {
-			// Insert words according to length, so that we can more easily
-			// filter them later
 			d.words = append(d.words, w)
 			wLength := len(w)
 			if d.MaxWordLength() < wLength {
@@ -72,6 +72,8 @@ func NewDictionary(r io.Reader) *Dictionary {
 			}
 		}
 	}
+	// sort words according to length, so that we can more easily
+	// filter them later
 	sort.Slice(d.words, func(i, j int) bool {
 		if len(d.words[i]) < len(d.words[j]) {
 			return true
@@ -79,6 +81,21 @@ func NewDictionary(r io.Reader) *Dictionary {
 		return false
 	})
 	return d
+}
+
+// Capitalize returns the current capitalizaton strategy.
+func (d *Dictionary) Capitalize() string {
+	return d.capitalize
+}
+
+// SetCapitalize sets the capitalization strategy. If the string passed in is not a recognized strategy, then 'none' is used.
+func (d *Dictionary) SetCapitalize(s string) {
+	switch s {
+	case "all", "random", "first":
+		d.capitalize = s
+	default:
+		d.capitalize = "none"
+	}
 }
 
 // MaxWordLength returns the current max word length
@@ -156,20 +173,44 @@ func (d *Dictionary) Word(idx int) string {
 	return d.words[d.start+idx]
 }
 
-// Words returns a slice of n randomly chosen words. If the dictionary cannot
-// support the minimum entropy, then an error is returned.
-func (d *Dictionary) Words(n int) ([]string, error) {
+// Passphrase returns a slice of n randomly chosen words. If the dictionary
+// cannot support the minimum entropy, then an error is returned.
+func (d *Dictionary) Passphrase(n int) ([]string, error) {
 	if d.Entropy(n) < minEntropy {
 		return nil, fmt.Errorf("dictionary cannot support more than %0.0f bits of entropy", minEntropy)
 	}
 	dictLengh := big.NewInt(int64(d.Length() - 1))
 	words := make([]string, n, n)
 	for i := 0; i < n; i++ {
-		idx, err := rand.Int(rand.Reader, dictLengh)
+		idx, err := rand.Int(d.randReader, dictLengh)
 		if err != nil {
 			return nil, fmt.Errorf("cannot generate random words: %s", err)
 		}
-		words[i] = d.words[d.start+int(idx.Int64())]
+		word := d.words[d.start+int(idx.Int64())]
+		switch d.capitalize {
+		case "all":
+			word = strings.ToUpper(word)
+		case "first":
+			word = strings.ToUpper(word[0:1]) + word[1:]
+		case "random":
+			for j := range word {
+				choice, err := rand.Int(d.randReader, big.NewInt(int64(9)))
+				if err != nil {
+					return []string{}, err
+				}
+				if int(choice.Int64()) < 5 {
+					switch j {
+					case 0:
+						word = strings.ToUpper(word[0:1]) + word[1:]
+					case len(word) - 1:
+						word = word[0:j] + strings.ToUpper(word[j:])
+					default:
+						word = word[0:j] + strings.ToUpper(word[j:j+1]) + word[j+1:]
+					}
+				}
+			}
+		}
+		words[i] = word
 	}
 	return words, nil
 }
