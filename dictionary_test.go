@@ -22,6 +22,28 @@ import (
 	"testing"
 )
 
+// newDictionary returns a Dictionary of the slice words. words is assumed to
+// already be sorted by word length, and the Dictionary will be configured with
+// a non-random randReader.
+func newDictionary(words []string) (d *Dictionary) {
+	d = &Dictionary{
+		randReader: constantReader(0),
+		words:      words,
+	}
+	d.SetMaxWordLength(len(words[len(words)-1]))
+	d.SetMinWordLength(len(words[0]))
+	return
+}
+
+type constantReader int
+
+func (c constantReader) Read(p []byte) (int, error) {
+	for i := range p {
+		p[i] = byte(c)
+	}
+	return len(p), nil
+}
+
 func TestNewDictionary(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
@@ -112,14 +134,36 @@ func TestNewDictionaryOrder(t *testing.T) {
 }
 
 func TestLength(t *testing.T) {
-	d := NewDictionary(bytes.NewBufferString("word"))
+	d := newDictionary([]string{"word"})
 	if d.Length() != 1 {
 		t.Error("expected length 1")
 	}
 
-	d = NewDictionary(bytes.NewBufferString("word\nanother"))
+	d = newDictionary([]string{"word", "another"})
 	if d.Length() != 2 {
 		t.Error("expected length 2")
+	}
+}
+
+func TestSetCapitalize(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"all", "all"},
+		{"first", "first"},
+		{"none", "none"},
+		{"random", "random"},
+		{"", "none"},
+		{"fjekajfe", "none"},
+		{"alll", "none"},
+	}
+	d := newDictionary([]string{"word", "another"})
+	for idx, test := range tests {
+		d.SetCapitalize(test.input)
+		if d.Capitalize() != test.expected {
+			t.Errorf("%d: expected '%s', got '%s'", idx+1, test.expected, d.capitalize)
+		}
 	}
 }
 
@@ -140,7 +184,7 @@ func TestSetMaxWordLength(t *testing.T) {
 		{maxLength: 6, expectedStop: 5, expectedLength: 5},
 		{maxLength: 16, expectedStop: 5, expectedLength: 5},
 	}
-	d := NewDictionary(bytes.NewBufferString("1\n12\n1234\n1234\n12345\n"))
+	d := newDictionary([]string{"1", "12", "1234", "1234", "12345"})
 	for idx, test := range tests {
 		d.SetMaxWordLength(test.maxLength)
 		if test.expectedStop == d.stop {
@@ -171,7 +215,7 @@ func TestSetMinWordLength(t *testing.T) {
 		{minLength: 6, expectedStart: 5, expectedLength: 0},
 		{minLength: 16, expectedStart: 5, expectedLength: 0},
 	}
-	d := NewDictionary(bytes.NewBufferString("1\n12\n1234\n1234\n12345\n"))
+	d := newDictionary([]string{"1", "12", "1234", "1234", "12345"})
 	for idx, test := range tests {
 		t.Run(fmt.Sprint(idx+1), func(t *testing.T) {
 			d.SetMinWordLength(test.minLength)
@@ -217,7 +261,7 @@ func TestWord(t *testing.T) {
 			Expected: "",
 		},
 	}
-	d := NewDictionary(bytes.NewBufferString("word\nanother"))
+	d := newDictionary([]string{"word", "another"})
 	for idx, test := range tests {
 		t.Run(fmt.Sprint(idx+1), func(t *testing.T) {
 			actual := d.Word(test.Index)
@@ -259,7 +303,7 @@ func TestWordWithMax(t *testing.T) {
 			Expected: "",
 		},
 	}
-	d := NewDictionary(bytes.NewBufferString("word\nanother"))
+	d := newDictionary([]string{"word", "another"})
 	d.SetMaxWordLength(5)
 	for idx, test := range tests {
 		t.Run(fmt.Sprint(idx+1), func(t *testing.T) {
@@ -302,7 +346,7 @@ func TestWordWithMin(t *testing.T) {
 			Expected: "",
 		},
 	}
-	d := NewDictionary(bytes.NewBufferString("word\nanother"))
+	d := newDictionary([]string{"word", "another"})
 	d.SetMinWordLength(5)
 	for idx, test := range tests {
 		t.Run(fmt.Sprint(idx+1), func(t *testing.T) {
@@ -328,6 +372,43 @@ func TestGetDict(t *testing.T) {
 		if "able" != actual {
 			t.Errorf("expected 'able', got '%s'", actual)
 		}
+	}
+}
+
+func TestCapitalizeAll(t *testing.T) {
+	d := newDictionary(strings.Split(strings.Repeat("able,", 1000), ","))
+	d.SetCapitalize("all")
+	p, err := d.Passphrase(4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual([]string{"ABLE", "ABLE", "ABLE", "ABLE"}, p) {
+		t.Errorf("expected [ABLE ABLE ABLE ABLE], got %v", p)
+	}
+}
+
+func TestCapitalizeRandom(t *testing.T) {
+	d := newDictionary(strings.Split(strings.Repeat("able,", 1000), ","))
+	// will get all caps since our randReader only returns 0
+	d.SetCapitalize("random")
+	p, err := d.Passphrase(4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual([]string{"ABLE", "ABLE", "ABLE", "ABLE"}, p) {
+		t.Errorf("expected [ABLE ABLE ABLE ABLE], got %v", p)
+	}
+}
+
+func TestCapitalizeFirst(t *testing.T) {
+	d := newDictionary(strings.Split(strings.Repeat("able,", 1000), ","))
+	d.SetCapitalize("first")
+	p, err := d.Passphrase(4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual([]string{"Able", "Able", "Able", "Able"}, p) {
+		t.Errorf("expected [Able Able Able Able], got %v", p)
 	}
 }
 

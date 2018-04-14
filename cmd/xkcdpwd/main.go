@@ -69,6 +69,7 @@ type Xkcdpwd struct {
 func (x *Xkcdpwd) Run() int {
 	var (
 		// flags
+		capitalize    string
 		lang          string
 		maxWordLength int
 		minWordLength int
@@ -82,6 +83,7 @@ func (x *Xkcdpwd) Run() int {
 	_ = flags.Bool("v", false, "be more verbose")
 
 	// register global flags
+	flags.StringVar(&capitalize, "capitalize", "none", "capitalize letters in passphrase")
 	flags.StringVar(&lang, "lang", "", "language to use, a valid IETF language tag (default: en)")
 	flags.IntVar(&maxWordLength, "max-length", 0, "maximum word length")
 	flags.IntVar(&minWordLength, "min-length", 0, "minimum word length")
@@ -116,15 +118,24 @@ func (x *Xkcdpwd) Run() int {
 		return errorExitCode
 	}
 
+	// check that capitalize is valid
+	switch capitalize {
+	case "all", "first", "none", "random":
+	default:
+		errLogger.Printf("error: invalid capitalization strategy '%s'", capitalize)
+		return errorExitCode
+	}
+
 	// Source lang from the environment, but prefer the command line if set
 	if envLang, ok := os.LookupEnv("LANG"); ok && lang == "" {
 		lang = envLang
 	}
 	d := dict.GetDict(lang)
+	d.SetCapitalize(capitalize)
 	d.SetMaxWordLength(maxWordLength)
 	d.SetMinWordLength(minWordLength)
 	for i := 0; i < 10; i++ {
-		words, err := d.Words(int(wordCount))
+		words, err := d.Passphrase(int(wordCount))
 		if err != nil {
 			errLogger.Printf("error: %v\n", err)
 			return errorExitCode
@@ -150,6 +161,8 @@ func setUsage(logger *log.Logger, fs *flag.FlagSet) {
 		switch f.DefValue {
 		case "":
 			fmt.Fprintf(tw, "\t-%s\t%s\n", f.Name, f.Usage)
+		case " ":
+			fmt.Fprintf(tw, "\t-%s\t%s (default: '%s')\n", f.Name, f.Usage, f.DefValue)
 		default:
 			fmt.Fprintf(tw, "\t-%s\t%s (default: %s)\n", f.Name, f.Usage, f.DefValue)
 		}
