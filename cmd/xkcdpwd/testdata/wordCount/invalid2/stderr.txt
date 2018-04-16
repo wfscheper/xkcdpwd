@@ -1,0 +1,1 @@
+error: words must be greater than 0

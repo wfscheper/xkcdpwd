@@ -69,13 +69,14 @@ type Xkcdpwd struct {
 func (x *Xkcdpwd) Run() int {
 	var (
 		// flags
-		capitalize    string
-		lang          string
-		maxWordLength int
-		minWordLength int
-		separator     string
-		showVersion   bool
-		wordCount     uint
+		capitalize      string
+		lang            string
+		maxWordLength   int
+		minWordLength   int
+		passphraseCount int
+		separator       string
+		showVersion     bool
+		wordCount       int
 	)
 
 	flags := flag.NewFlagSet(appName, flag.ContinueOnError)
@@ -87,9 +88,10 @@ func (x *Xkcdpwd) Run() int {
 	flags.StringVar(&lang, "lang", "", "language to use, a valid IETF language tag (default: en)")
 	flags.IntVar(&maxWordLength, "max-length", 0, "maximum word length")
 	flags.IntVar(&minWordLength, "min-length", 0, "minimum word length")
+	flags.IntVar(&passphraseCount, "phrases", 10, "the number of passphrases")
 	flags.StringVar(&separator, "separator", " ", "passphrase separator")
 	flags.BoolVar(&showVersion, "version", false, "show version information")
-	flags.UintVar(&wordCount, "words", 4, "the number of words in each passphrase")
+	flags.IntVar(&wordCount, "words", 4, "the number of words in each passphrase")
 
 	// wrap stdout and stderr in loggers
 	outLogger := log.New(x.Stdout, "", 0)
@@ -110,6 +112,18 @@ func (x *Xkcdpwd) Run() int {
  platform    : %s/%s
 `, appName, version, buildDate, commitHash, runtime.Version(), runtime.Compiler, runtime.GOOS, runtime.GOARCH)
 		return successExitCode
+	}
+
+	// check that words is valid
+	if wordCount <= 0 {
+		errLogger.Printf("error: words must be greater than 0")
+		return errorExitCode
+	}
+
+	// check that phrases is valid
+	if passphraseCount <= 0 {
+		errLogger.Printf("error: phrases must be greater than 0")
+		return errorExitCode
 	}
 
 	// check that separator is valid
@@ -134,8 +148,8 @@ func (x *Xkcdpwd) Run() int {
 	d.SetCapitalize(capitalize)
 	d.SetMaxWordLength(maxWordLength)
 	d.SetMinWordLength(minWordLength)
-	for i := 0; i < 10; i++ {
-		words, err := d.Passphrase(int(wordCount))
+	for i := 0; i < passphraseCount; i++ {
+		words, err := d.Passphrase(wordCount)
 		if err != nil {
 			errLogger.Printf("error: %v\n", err)
 			return errorExitCode
