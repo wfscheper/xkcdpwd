@@ -8,6 +8,7 @@ Flags:
   -lang        language to use, a valid IETF language tag (default: en)
   -max-length  maximum word length (default: 0)
   -min-length  minimum word length (default: 0)
+  -phrases     the number of passphrases (default: 10)
   -separator   passphrase separator (default: ' ')
   -v           be more verbose (default: false)
   -version     show version information (default: false)
