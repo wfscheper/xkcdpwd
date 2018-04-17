@@ -1,29 +1,58 @@
-env:
-  global:
-  - CC_TEST_REPORTER_ID=87fb89369423b4165e6a89e7e26570dc9cfbd305201b848cb2124887a65d571d
-
 language: go
 sudo: false
-go:
-- 1.10.x
-- master
-
-before_script:
-  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-  - chmod +x ./cc-test-reporter
-  - ./cc-test-reporter before-build
-
-install:
-- go get -v github.com/mattn/goveralls
-- go get -v github.com/golang/dep
-- make vendor
-
-script:
-- make
-- make test-coverage
-- $GOPATH/bin/goveralls -coverprofile=test/cover.out -service=travis-ci
-
-after_script:
-- pushd ./test
-- ../cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
-- popd
+notifications:
+  email: false
+jobs:
+  include:
+  - stage: test
+    go: 1.10.x
+    os: linux
+    install:
+    - go get -v github.com/mattn/goveralls
+    - make vendor
+    script:
+    - make test
+    - make test-coverage
+    after_success:
+    - "$GOPATH/bin/goveralls -coverprofile=test/cover.out -service=travis-ci"
+  - &simple-test
+    stage: test
+    go: 1.9.x
+    os: linux
+    install: skip
+    script: make test
+  - <<: *simple-test
+    go: tip
+  - <<: *simple-test
+    go: 1.10.x
+    os: osx
+    env:
+    - HOMEBREW_NO_AUTO_UPDATE=1
+  - stage: deploy
+    go: 1.10.x
+    install: skip
+    script: skip
+    before_deploy:
+    - make dist
+    deploy:
+      provider: releases
+      api_key:
+        secure: Af0g1jALoXDhtnB5mVuaZ/axK3ACVtf+Bi6FMauei2DKuuupU2OWQvCX8pLU6q/kpK9zYXPGCr56cQ6MIWJZ+v09L8bg3D5W8lDY9x6ArNkbLA9sA1XyLpQPd7OLaQgUUvcbRWz5EYm3OCuEfNGHXiCN7WrzvOt2pp96DGvaxSILcMHFhT3OC6SThJG9LOvFBZX3+n1IPVbxSfukU/WYBfuwlQ3KVnMFv68+pCXOBiEwC2HlhgTCqvSBlKIEZB8u7jxpDqp/jBqws6wgXSLwrPCVyCNwaM93M0bl9Asw8iHRHoKklC+JyaxR1r4/KtlY4yKelHRdhAaBwHP2WwcTyz3IIvN/O6H6o7pkkxsElb0W1u4+40QVdnSNabqMHFXqaaRirZjU3cALB2/OmjiGcwLV2hSMrGO0Amzsl9pcIFYPfzabGNXO/AsNI3OJIBWuIzJF9ve+/BVwlzupAgFxbMU5mPx1iVxK/QBbG/CnqK1IAAQG750ZzF/EJ6efa9OpUuDI7fBX/Buu50A9n3hHZjipU6Cov3VjRzR/bylnmlY6fheRH8d/Fe3v15am3WQETkhXkwAX3iczIeezpy4gVSu9zbIfV5r3NYCFVTt2nOpcuMY/Wtsx9l1S6+We8PCU8HR9JmrxHbaqfptqTC+429SeFltE5xbApfj1zfcAO3Q=
+      file:
+      - dist/xkcdpwd-linux-amd64
+      - dist/xkcdpwd-linux-amd64.sha256
+      - dist/xkcdpwd-darwin-amd64
+      - dist/xkcdpwd-darwin-amd64.sha256
+      - dist/xkcdpwd-windows-amd64.exe
+      - dist/xkcdpwd-windows-amd64.exe.sha256
+      - dist/xkcdpwd-linux-386
+      - dist/xkcdpwd-linux-386.sha256
+      - dist/xkcdpwd-darwin-386
+      - dist/xkcdpwd-darwin-386.sha256
+      - dist/xkcdpwd-windows-386.exe
+      - dist/xkcdpwd-windows-386.exe.sha256
+      skip_cleanup: true
+      on:
+        repo: wfscheper/xkcdpwd
+        branch: master
+        tags: true
