@@ -2,24 +2,6 @@
 
 
 [[projects]]
-  name = "github.com/davecgh/go-spew"
-  packages = ["spew"]
-  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
-  version = "v1.1.0"
-
-[[projects]]
-  name = "github.com/pmezard/go-difflib"
-  packages = ["difflib"]
-  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
-  version = "v1.0.0"
-
-[[projects]]
-  name = "github.com/stretchr/testify"
-  packages = ["assert"]
-  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
-  version = "v1.2.1"
-
-[[projects]]
   name = "golang.org/x/text"
   packages = [
     "internal/gen",
@@ -33,6 +15,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "51bcb76c63e409236dc6e95f44f66afac84fdbdbd8ab368afe2a414e6efaaa26"
+  inputs-digest = "ee1995d4301c86af03f423a8602a3a2b39d4376711fdb45d56b3099569509bd5"
   solver-name = "gps-cdcl"
   solver-version = 1
