@@ -2,6 +2,53 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/AlekSi/gocov-xml"
+  packages = ["."]
+  revision = "dee33fe4b4adad5fdcad993f498fb4450d5be0a1"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/axw/gocov"
+  packages = [
+    ".",
+    "gocov",
+    "gocov/internal/testflag",
+    "gocovutil"
+  ]
+  revision = "3a69a0d2a4ef1f263e2d92b041a69593d6964fe8"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/golang/lint"
+  packages = ["golint"]
+  revision = "470b6b0bb3005eda157f0275e2e4895055396a81"
+
+[[projects]]
+  name = "github.com/shuLhan/go-bindata"
+  packages = [
+    ".",
+    "cmd/go-bindata"
+  ]
+  revision = "e38fe368bbbff226005fc12420c41a1ad14e388b"
+  version = "v3.4.0"
+
+[[projects]]
+  name = "github.com/tebeka/go2xunit"
+  packages = [
+    ".",
+    "lib"
+  ]
+  revision = "b1260ed1eacd4ec0a4393c35aa2d6cd52362f71e"
+  version = "v1.4.8"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/lint"
+  packages = ["."]
+  revision = "470b6b0bb3005eda157f0275e2e4895055396a81"
+
+[[projects]]
   name = "golang.org/x/text"
   packages = [
     "internal/gen",
@@ -12,9 +59,21 @@
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
 
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/tools"
+  packages = [
+    "cover",
+    "go/ast/astutil",
+    "go/gcexportdata",
+    "go/internal/gcimporter",
+    "go/types/typeutil"
+  ]
+  revision = "c65208ee29128450a4a024e3b7710f3a8d14028d"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ee1995d4301c86af03f423a8602a3a2b39d4376711fdb45d56b3099569509bd5"
+  inputs-digest = "9d09cfa98822d945ec16bf53121b5cebbff63c09f906a72461bff511305d3604"
   solver-name = "gps-cdcl"
   solver-version = 1

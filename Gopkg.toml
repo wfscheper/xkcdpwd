@@ -24,6 +24,13 @@
 #   go-tests = true
 #   unused-packages = true
 
+required = [
+    "github.com/golang/lint/golint",
+    "github.com/axw/gocov/gocov",
+    "github.com/AlekSi/gocov-xml",
+    "github.com/tebeka/go2xunit",
+    "github.com/shuLhan/go-bindata/cmd/go-bindata",
+]
 
 [prune]
   go-tests = true

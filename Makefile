@@ -16,25 +16,30 @@ ARCHES    = amd64 386
 override TAGS := $(and $(TAGS),-tags $(TAGS))
 
 GOLDFLAGS  := '-X main.version=$(VERSION) -X main.buildDate=$(DATE) -X main.commitHash=$(COMMIT)'
-GO      = go
-GOBUILD = $(GO) build -v
-GOTEST  = $(GO) test
-GODOC   = godoc
-GOFMT   = gofmt
-DOCKER  = docker
-TIMEOUT = 15
+GO          = go
+GOBUILD     = $(GO) build -v
+GOTEST      = $(GO) test
+GODOC       = godoc
+GOFMT       = $(GO) fmt
+DOCKER      = docker
+TIMEOUT     = 15
+
 V = 0
 Q = $(if $(filter 1,$V),,@)
 M = $(shell printf "\033[34;1m▶\033[0m")
 
+# Environment
+GOOS   = $(shell go env GOOS)
+GOARCH = $(shell go env GOARCH)
+
 .PHONY: all
-all: generate fmt lint vendor ; $(info $(M) building executable…) @ ## Build program binary
+all: vendor generate fmt lint ; $(info $(M) building executable…) @ ## Build program binary
 	$Q $(GO) build $(TAGS) \
 		-ldflags $(GOLDFLAGS) \
 		-o bin/$(TARGET) cmd/xkcdpwd/main.go
 
 .PHONY: dist
-dist: generate fmt lint vendor ; $(info $(M) building distributions...)
+dist: vendor generate fmt lint ; $(info $(M) building distributions...)
 	$Q [[ -d dist ]] && rm -rf dist/ || : ; \
 	mkdir dist ; \
 	for GOOS in $(PLATFORMS) ; do \
@@ -49,29 +54,35 @@ dist: generate fmt lint vendor ; $(info $(M) building distributions...)
 
 # Tools
 
-GODEP = $(BIN)/dep
-$(BIN)/dep: ; $(info $(M) building go dep…)
-	$Q go get github.com/golang/dep/cmd/dep
+TOOLS := tools
+$(TOOLS):
+	@mkdir -p $@
 
-GOLINT = $(BIN)/golint
-$(BIN)/golint: ; $(info $(M) building golint…)
-	$Q go get github.com/golang/lint/golint
+GODEP := $(TOOLS)/dep
+$(GODEP): | $(TOOLS) ; $(info $(M) building go dep…)
+	$Q curl -fsSL https://github.com/golang/dep/releases/download/v0.4.1/dep-$(GOOS)-$(GOARCH) -o $@
+	$Q echo "$$(curl -fsSL https://github.com/golang/dep/releases/download/v0.4.1/dep-$(GOOS)-$(GOARCH).sha256 | awk '{print $$1}')  $@" | sha256sum -c - >/dev/null
+	$Q chmod +x $@
 
-GOCOV = $(BIN)/gocov
-$(BIN)/gocov: ; $(info $(M) building gocov…)
-	$Q go get github.com/axw/gocov/...
+GOLINT := $(TOOLS)/golint
+$(GOLINT): | $(TOOLS) ; $(info $(M) building golint…)
+	$Q $(GOBUILD) -o $@ ./vendor/github.com/golang/lint/golint
 
-GOCOVXML = $(BIN)/gocov-xml
-$(BIN)/gocov-xml: ; $(info $(M) building gocov-xml…)
-	$Q go get github.com/AlekSi/gocov-xml
+GOCOV := $(TOOLS)/gocov
+$(GOCOV): | $(TOOLS) ; $(info $(M) building gocov…)
+	$Q $(GOBUILD) -o $@ ./vendor/github.com/axw/gocov/gocov
 
-GO2XUNIT = $(BIN)/go2xunit
-$(BIN)/go2xunit: ; $(info $(M) building go2xunit…)
-	$Q go get github.com/tebeka/go2xunit
+GOCOVXML := $(TOOLS)/gocov-xml
+$(GOCOVXML): | $(TOOLS) ; $(info $(M) building gocov-xml…)
+	$Q $(GOBUILD) -o $@ ./vendor/github.com/AlekSi/gocov-xml
 
-GOBINDATA = $(BIN)/go-bindata
-$(BIN)/go-bindata: ; $(info $(M) building go-bindata...)
-	$Q go get github.com/shuLhan/go-bindata/...
+GO2XUNIT := $(TOOLS)/go2xunit
+$(GO2XUNIT): ; $(info $(M) building go2xunit…)
+	$Q $(GOBUILD) -o $@ ./vendor/github.com/tebeka/go2xunit
+
+GOBINDATA = $(TOOLS)/go-bindata
+$(GOBINDATA): ; $(info $(M) building go-bindata...)
+	$Q $(GOBUILD) -o $@ ./vendor/github.com/shuLhan/go-bindata/cmd/go-bindata
 
 # Tests
 
@@ -86,7 +97,7 @@ $(TEST_TARGETS): test
 check test tests: generate fmt lint vendor ; $(info $(M) running $(NAME:%=% )tests…) @ ## Run tests
 	$Q $(GOTEST) -timeout $(TIMEOUT)s $(ARGS) $(TESTPKGS)
 
-test-xml: fmt lint vendor | $(GO2XUNIT) ; $(info $(M) running $(NAME:%=% )tests…) @ ## Run tests with xUnit output
+test-xml: vendor fmt lint | $(GO2XUNIT) ; $(info $(M) running $(NAME:%=% )tests…) @ ## Run tests with xUnit output
 	$Q 2>&1 $(GOTEST) -timeout 20s -v $(TESTPKGS) | tee test/tests.output
 	$(GO2XUNIT) -fail -input test/tests.output -output test/tests.xml
 
@@ -107,33 +118,24 @@ test-coverage: fmt lint vendor test-coverage-tools ; $(info $(M) running coverag
 	$Q $(GOCOV) convert $(COVERAGE_PROFILE) | $(GOCOVXML) > $(COVERAGE_XML)
 
 .PHONY: test-update
-test-update: fmt lint vendor ; $(info $(M) updating golden files...)
+test-update: vendor fmt lint ; $(info $(M) updating golden files...)
 	$Q $(GOTEST) ./cmd/xkcdpwd/... -update
 
 .PHONY: lint
 lint: vendor | $(GOLINT) ; $(info $(M) running golint…) @ ## Run golint
-	$Q ret=0 && for pkg in $(PKGS); do \
-		test -z "$$($(GOLINT) $$pkg | tee /dev/stderr)" || ret=1 ; \
-	 done ; exit $$ret
+	$Q $(GOLINT) $(PKGS)
 
 .PHONY: fmt
-fmt: ; $(info $(M) running gofmt…) @ ## Run gofmt on all source files
-	@ret=0 && for d in $$($(GO) list -f '{{.Dir}}' ./... | grep -v /vendor/); do \
-		$(GOFMT) -l -w $$d/*.go || ret=$$? ; \
-	 done ; exit $$ret
+fmt: ; $(info $(M) running go fmt…) @ ## Run go fmt on all packages
+	$Q $(GOFMT) $(PKGS)
 
-.PHONY: generate generate-tools
-generate-tools: | $(GOBINDATA)
-generate: generate-tools internal/langs/languages.go ; $(info $(M) running go generate...)
-internal/langs/languages.go: internal/langs/languages/en
-	$Q go generate ./...
+.PHONY: generate
+generate: | $(GOBINDATA) ; $(info $(M) running go generate...)
+	$Q PATH=$(TOOLS):$$PATH && $(GO) generate ./dictionary.go
 
 # Dependency management
 
-Gopkg.toml: | $(GODEP); $(info $(M) generating Gopkg.toml…)
-	$Q $(GODEP) init
-
-Gopkg.lock: | Gopkg.toml $(GODEP); $(info $(M) updating Gopkg.lock…)
+Gopkg.lock: Gopkg.toml | $(GODEP); $(info $(M) updating Gopkg.lock…)
 	$Q $(GODEP) ensure -no-vendor
 
 vendor: Gopkg.lock | $(GODEP) ; $(info $(M) retrieving dependencies…)
@@ -155,7 +157,7 @@ endif
 .PHONY: clean
 clean: ; $(info $(M) cleaning…)	@ ## Cleanup everything
 	@rm -f internal/langs/languages.go
-	@rm -rf bin/ dist/
+	@rm -rf bin/ dist/ tools/
 	@rm -rf test/tests.* test/coverage.*
 
 .PHONY: help
