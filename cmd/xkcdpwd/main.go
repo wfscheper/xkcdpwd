@@ -18,13 +18,16 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"runtime"
 	"strings"
 	"text/tabwriter"
 
+	"github.com/pelletier/go-toml"
 	dict "github.com/wfscheper/xkcdpwd"
+	"github.com/wfscheper/xkcdpwd/internal/userinfo"
 )
 
 const (
@@ -34,7 +37,7 @@ const (
 
 var (
 	appName    = "xkcdpwd"
-	version    = "deveL"
+	version    = "devel"
 	buildDate  string
 	commitHash string
 )
@@ -67,6 +70,40 @@ type Xkcdpwd struct {
 
 // Run executes xkcdpwd
 func (x *Xkcdpwd) Run() int {
+	// wrap stdout and stderr in loggers
+	outLogger := log.New(x.Stdout, "", 0)
+	errLogger := log.New(x.Stderr, "", 0)
+
+	cfgfileDefault, err := userinfo.DefaultConfigFile(appName)
+	if err != nil {
+		errLogger.Printf("Cannot determine default config file location: %s", err)
+		return errorExitCode
+	}
+
+	var cfgfile string
+	var cfg *toml.Tree
+	cfgFlags := flag.NewFlagSet(appName, flag.ContinueOnError)
+	cfgFlags.SetOutput(ioutil.Discard)
+	cfgFlags.StringVar(&cfgfile, "cfgfile", "", "path to config file")
+	if err := cfgFlags.Parse(x.Args[1:]); err != nil {
+		switch err {
+		case flag.ErrHelp:
+		default:
+			cfgfile = cfgfileDefault
+		}
+	}
+	cfg, err = toml.LoadFile(cfgfile)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			errLogger.Printf("cannot read config file '%s': %s", cfgfile, err)
+			return errorExitCode
+		}
+	}
+	if cfg == nil {
+		cfg, _ = toml.TreeFromMap(map[string]interface{}{})
+	}
+
+	// register global flags
 	var (
 		// flags
 		capitalize      string
@@ -78,24 +115,37 @@ func (x *Xkcdpwd) Run() int {
 		showVersion     bool
 		wordCount       int
 	)
-
 	flags := flag.NewFlagSet(appName, flag.ContinueOnError)
 	flags.SetOutput(x.Stderr)
+
 	_ = flags.Bool("v", false, "be more verbose")
-
-	// register global flags
-	flags.StringVar(&capitalize, "capitalize", "none", "capitalize letters in passphrase")
-	flags.StringVar(&lang, "lang", "", "language to use, a valid IETF language tag (default: en)")
-	flags.IntVar(&maxWordLength, "max-length", 0, "maximum word length")
-	flags.IntVar(&minWordLength, "min-length", 0, "minimum word length")
-	flags.IntVar(&passphraseCount, "phrases", 10, "the number of passphrases")
-	flags.StringVar(&separator, "separator", " ", "passphrase separator")
+	_ = flags.String("cfgfile", cfgfile, "path to config file")
 	flags.BoolVar(&showVersion, "version", false, "show version information")
-	flags.IntVar(&wordCount, "words", 4, "the number of words in each passphrase")
 
-	// wrap stdout and stderr in loggers
-	outLogger := log.New(x.Stdout, "", 0)
-	errLogger := log.New(x.Stderr, "", 0)
+	var capitalizeDefault = cfg.GetDefault(appName+".capitalize", "none").(string)
+	flags.StringVar(&capitalize, "capitalize", capitalizeDefault, "capitalize letters in passphrase")
+
+	var langDefault = cfg.GetDefault(appName+".lang", "").(string)
+	var langHelpDefault string
+	if langDefault == "" {
+		langHelpDefault = " (default: en)"
+	}
+	flags.StringVar(&lang, "lang", langDefault, fmt.Sprintf("language to use, a valid IETF language tag%s", langHelpDefault))
+
+	var maxWordLengthDefault = cfg.GetDefault(appName+".max-length", int64(0)).(int64)
+	flags.IntVar(&maxWordLength, "max-length", int(maxWordLengthDefault), "maximum word length")
+
+	var minWordLengthDefault = cfg.GetDefault(appName+".min-length", int64(0)).(int64)
+	flags.IntVar(&minWordLength, "min-length", int(minWordLengthDefault), "minimum word length")
+
+	var passphraseCountDefault = cfg.GetDefault(appName+".phrases", int64(10)).(int64)
+	flags.IntVar(&passphraseCount, "phrases", int(passphraseCountDefault), "the number of passphrases")
+
+	var separatorDefault = cfg.GetDefault(appName+".separator", " ").(string)
+	flags.StringVar(&separator, "separator", separatorDefault, "passphrase separator")
+
+	var wordCountDefault = cfg.GetDefault(appName+".words", int64(4)).(int64)
+	flags.IntVar(&wordCount, "words", int(wordCountDefault), "the number of words in each passphrase")
 
 	setUsage(errLogger, flags)
 	if err := flags.Parse(x.Args[1:]); err != nil {

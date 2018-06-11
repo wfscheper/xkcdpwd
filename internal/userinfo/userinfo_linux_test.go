@@ -11,22 +11,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package userinfo
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
 
-func Test_checkSeparatro(t *testing.T) {
-	// valid
-	valid := []string{"", " ", "-", ".", "_"}
-	for _, sep := range valid {
-		if !checkSeparator(sep) {
-			t.Errorf("valid separator '%s' failed check", sep)
-		}
+func TestDefaultConfigDir(t *testing.T) {
+	actual := DefaultConfigDir("foo")
+	if "foo/.config" != actual {
+		t.Errorf("wrong config dir")
 	}
-	invalid := []string{"ajfjke;ja;", "     ", "----", "....", "____", "a", "z", "A", "Z", "ü"}
-	for _, sep := range invalid {
-		if checkSeparator(sep) {
-			t.Errorf("invalid separator '%s' passed check", sep)
-		}
+}
+
+func TestDefaultConfigFile(t *testing.T) {
+	actual, err := DefaultConfigFile("foo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := filepath.Join("/home", os.Getenv("USER"), ".config", "foo", "foo.conf")
+	if actual != expected {
+		t.Errorf("wrong config file")
 	}
 }
