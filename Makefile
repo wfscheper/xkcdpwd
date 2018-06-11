@@ -29,8 +29,9 @@ Q = $(if $(filter 1,$V),,@)
 M = $(shell printf "\033[34;1m▶\033[0m")
 
 # Environment
-GOOS   = $(shell go env GOOS)
-GOARCH = $(shell go env GOARCH)
+GOOS      = $(shell go env GOOS)
+GOARCH    = $(shell go env GOARCH)
+SHA256SUM = $(if $(filter $(GOOS),darwin),shasum -a 256,sha256sum)
 
 .PHONY: all
 all: vendor generate fmt lint ; $(info $(M) building executable…) @ ## Build program binary
@@ -48,7 +49,7 @@ dist: vendor generate fmt lint ; $(info $(M) building distributions...)
 			GOOS=$$GOOS GOARCH=$$GOARCH $(GOBUILD) -a $(TAGS) \
 				-ldflags $(GOLDFLAGS) \
 				-o dist/$$binout ; \
-			sha256sum dist/$$binout > dist/$$binout.sha256 ; \
+			$(SHA256SUM) dist/$$binout > dist/$$binout.sha256 ; \
 		done ; \
 	done
 
@@ -61,7 +62,7 @@ $(TOOLS):
 GODEP := $(TOOLS)/dep
 $(GODEP): | $(TOOLS) ; $(info $(M) building go dep…)
 	$Q curl -fsSL https://github.com/golang/dep/releases/download/v0.4.1/dep-$(GOOS)-$(GOARCH) -o $@
-	$Q echo "$$(curl -fsSL https://github.com/golang/dep/releases/download/v0.4.1/dep-$(GOOS)-$(GOARCH).sha256 | awk '{print $$1}')  $@" | sha256sum -c - >/dev/null
+	$Q echo "$$(curl -fsSL https://github.com/golang/dep/releases/download/v0.4.1/dep-$(GOOS)-$(GOARCH).sha256 | awk '{print $$1}')  $@" | $(SHA256SUM) -c - >/dev/null
 	$Q chmod +x $@
 
 GOLINT := $(TOOLS)/golint
@@ -94,7 +95,7 @@ test-verbose: ARGS=-v            ## Run tests in verbose mode with coverage repo
 test-race:    ARGS=-race         ## Run tests with race detector
 $(TEST_TARGETS): NAME=$(MAKECMDGOALS:test-%=%)
 $(TEST_TARGETS): test
-check test tests: generate fmt lint vendor ; $(info $(M) running $(NAME:%=% )tests…) @ ## Run tests
+check test tests: vendor generate fmt lint ; $(info $(M) running $(NAME:%=% )tests…) @ ## Run tests
 	$Q $(GOTEST) -timeout $(TIMEOUT)s $(ARGS) $(TESTPKGS)
 
 test-xml: vendor fmt lint | $(GO2XUNIT) ; $(info $(M) running $(NAME:%=% )tests…) @ ## Run tests with xUnit output
@@ -108,7 +109,7 @@ COVERAGE_HTML = $(COVERAGE_DIR)/index.html
 .PHONY: test-coverage test-coverage-tools
 test-coverage-tools: | $(GOCOV) $(GOCOVXML)
 test-coverage: COVERAGE_DIR := $(CURDIR)/test
-test-coverage: fmt lint vendor test-coverage-tools ; $(info $(M) running coverage tests…) @ ## Run coverage tests
+test-coverage: vendor fmt lint test-coverage-tools ; $(info $(M) running coverage tests…) @ ## Run coverage tests
 	$Q mkdir -p $(COVERAGE_DIR)
 	$Q $(GOTEST) \
 			-covermode=$(COVERAGE_MODE) \

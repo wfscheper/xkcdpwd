@@ -36,3 +36,16 @@ func TestDefaultConfigFile(t *testing.T) {
 		t.Errorf("wrong config file")
 	}
 }
+
+func TestDefaultConfigDirEnv(t *testing.T) {
+	os.Setenv("XDG_CONFIG_HOME", "/foo")
+	defer func() {
+		if err := os.Unsetenv("XDG_CONFIG_HOME"); err != nil {
+			t.Fatal(err)
+		}
+	}()
+	actual := DefaultConfigDir("bar")
+	if actual != "/foo" {
+		t.Error("wrong config dir")
+	}
+}
