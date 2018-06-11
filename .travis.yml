@@ -11,8 +11,8 @@ jobs:
     - go get -v github.com/mattn/goveralls
     - make vendor
     script:
-    - make test
-    - make test-coverage
+    - make V=1 test
+    - make V=1 test-coverage
     after_success:
     - "$GOPATH/bin/goveralls -coverprofile=test/cover.out -service=travis-ci"
   - &simple-test
@@ -33,7 +33,7 @@ jobs:
     install: skip
     script: skip
     before_deploy:
-    - make dist
+    - make V=1 dist
     deploy:
       provider: releases
       api_key:
