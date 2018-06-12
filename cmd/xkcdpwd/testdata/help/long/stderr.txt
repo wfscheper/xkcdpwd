@@ -5,6 +5,7 @@ xkcdpwd is a passphrase generator based on XKCD comic #936
 Flags:
 
   -capitalize  capitalize letters in passphrase (default: none)
+  -cfgfile     path to config file
   -lang        language to use, a valid IETF language tag (default: en)
   -max-length  maximum word length (default: 0)
   -min-length  minimum word length (default: 0)

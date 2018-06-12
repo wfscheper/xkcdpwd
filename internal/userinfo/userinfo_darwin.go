@@ -11,22 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package userinfo
 
-import "testing"
+import "path/filepath"
 
-func Test_checkSeparatro(t *testing.T) {
-	// valid
-	valid := []string{"", " ", "-", ".", "_"}
-	for _, sep := range valid {
-		if !checkSeparator(sep) {
-			t.Errorf("valid separator '%s' failed check", sep)
-		}
-	}
-	invalid := []string{"ajfjke;ja;", "     ", "----", "....", "____", "a", "z", "A", "Z", "ü"}
-	for _, sep := range invalid {
-		if checkSeparator(sep) {
-			t.Errorf("invalid separator '%s' passed check", sep)
-		}
-	}
+// DefaultConfigDir returns the path to the OS specific user config directory.
+func DefaultConfigDir(homeDir string) string {
+	return filepath.Join(homeDir, "Library", "Application Support")
 }

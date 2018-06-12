@@ -11,22 +11,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+// +build darwin linux windows
 
-import "testing"
+package userinfo
 
-func Test_checkSeparatro(t *testing.T) {
-	// valid
-	valid := []string{"", " ", "-", ".", "_"}
-	for _, sep := range valid {
-		if !checkSeparator(sep) {
-			t.Errorf("valid separator '%s' failed check", sep)
-		}
+import (
+	"errors"
+	"os/user"
+	"path/filepath"
+)
+
+// DefaultConfigFile returns the path to default location for a config file,
+// based on the underlying OS.
+func DefaultConfigFile(appName string) (string, error) {
+	u, err := user.Current()
+	if err != nil {
+		return "", err
 	}
-	invalid := []string{"ajfjke;ja;", "     ", "----", "....", "____", "a", "z", "A", "Z", "ü"}
-	for _, sep := range invalid {
-		if checkSeparator(sep) {
-			t.Errorf("invalid separator '%s' passed check", sep)
-		}
+	if u.HomeDir == "" {
+		return "", errors.New("cannot determine user specific home directory")
 	}
+	cfgDir := DefaultConfigDir(u.HomeDir)
+	return filepath.Join(cfgDir, appName, appName+".conf"), nil
 }

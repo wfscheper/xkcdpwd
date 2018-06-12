@@ -24,10 +24,15 @@
 #   go-tests = true
 #   unused-packages = true
 
-
-[[constraint]]
-  name = "github.com/stretchr/testify"
-  version = "1.2.1"
+required = [
+    "github.com/AlekSi/gocov-xml",
+    "github.com/tebeka/go2xunit",
+    "github.com/shuLhan/go-bindata/cmd/go-bindata",
+    "github.com/axw/gocov/gocov",
+    "github.com/golang/lint/golint",
+    "github.com/shuLhan/go-bindata",
+    "github.com/tebeka/go2xunit",
+]
 
 [prune]
   go-tests = true
