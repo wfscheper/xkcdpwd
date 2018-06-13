@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## v0.1.0 - 2018-06-11
 
 ### Added
 
@@ -17,3 +17,4 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Pick from one of several capitalization strategies.
 - Options to set minimum and maximum word length.
 - Control the character used to separate words in the passphrase.
+- Support config files for changing defaults for all command-line options.
