@@ -20,7 +20,7 @@ import (
 
 // DefaultConfigDir returns the path to the OS specific user config directory.
 func DefaultConfigDir(homeDir string) string {
-	if cfgDir, ok := os.Lookup("APPDATA"); ok {
+	if cfgDir := os.Getenv("APPDATA"); cfgDir != "" {
 		return cfgDir
 	}
 	return filepath.Join(homeDir, "AppData", "Roaming")
