@@ -35,9 +35,6 @@ tags
 
 # Ignore build output and vendor directories
 /bin/
+/coverage/
 /tools/
 /vendor/
-
-# go generate'd files
-/internal/langs/languages.go
-/test/

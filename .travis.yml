@@ -2,38 +2,36 @@ language: go
 sudo: false
 notifications:
   email: false
+go: 
+- 1.11
+- tip
+os:
+- linux
+- osx
+env:
+- GO111MODULE=on
+install:
+- go get -v github.com/magefile/mage
+script:
+- mage -v test
+- mage -v coverage
+after_success:
+- mage -v coveralls
 jobs:
   include:
-  - stage: test
-    go: 1.10.x
+  - stage: deploy
+    name: "Deploy release to GitHub"
+    go: 1.11
     os: linux
     install:
-    - go get -v github.com/mattn/goveralls
-    - make vendor
-    script:
-    - make V=1 test
-    - make V=1 test-coverage
-    after_success:
-    - "$GOPATH/bin/goveralls -coverprofile=test/cover.out -service=travis-ci"
-  - &simple-test
-    stage: test
-    go: 1.9.x
-    os: linux
-    install: skip
-    script: make test
-  - <<: *simple-test
-    go: tip
-  - <<: *simple-test
-    go: 1.10.x
-    os: osx
-    env:
-    - HOMEBREW_NO_AUTO_UPDATE=1
-  - stage: deploy
-    go: 1.10.x
-    install: skip
+    - mkdir -p $HOME/src
+    - mv $HOME/gopath/src/github.com/wfscheper/xkcdpwd $HOME/src
+    - export TRAVIS_BUILD_DIR=$HOME/src/xkcdpwd
+    - cd $HOME/src/xkcdpwd
+    - go get -v github.com/magefile/mage
     script: skip
     before_deploy:
-    - make V=1 dist
+    - mage -v dist
     deploy:
       provider: releases
       api_key:
