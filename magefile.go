@@ -19,8 +19,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -51,6 +53,10 @@ var (
 	govet     = sh.RunCmd(goexe, "vet")
 	goveralls = filepath.Join("tools", "goveralls")
 	golint    = filepath.Join("tools", "golint")
+
+	// distribution targets
+	platforms = []string{"darwin", "linux", "windows"}
+	arches    = []string{"386", "amd64"}
 )
 
 func init() {
@@ -104,22 +110,50 @@ func Build(ctx context.Context) error {
 }
 
 // Dist prepare a release
-func Dist(ctx context.Context) error {
+func Dist(ctx context.Context) (err error) {
 	mg.CtxDeps(ctx, TestRace)
 	fmt.Println("building distribution…")
-	for _, goos := range []string{"linux", "darwin", "windows"} {
-		for _, goarch := range []string{"amd64", "386"} {
+	for _, goos := range platforms {
+		for _, goarch := range arches {
 			binname := strings.Join([]string{targetName, goos, goarch}, "-")
+			if "windows" == goos {
+				binname += ".exe"
+			}
 			env := buildEnvs()
 			env["GOOS"] = goos
 			env["GOARCH"] = goarch
-			if err := sh.RunWith(env, goexe, "build", "-v", "-a", "-tags", buildTags(), "-ldflags", ldflags, "-o",
-				filepath.Join("dist", binname), filepath.Join("cmd", "xkcdpwd", "main.go")); err != nil {
-				return err
+			fmt.Println("building " + binname + "…")
+			err = sh.RunWith(env, goexe, "build", "-v", "-a",
+				"-tags", buildTags(),
+				"-ldflags", ldflags,
+				"-o", filepath.Join("dist", binname),
+				filepath.Join("cmd", "xkcdpwd", "main.go"))
+			if err != nil {
+				break
+			}
+			err = checksum(binname)
+			if err != nil {
+				break
 			}
 		}
 	}
-	return nil
+	return err
+}
+
+func checksum(filename string) (err error) {
+	os.Chdir("dist")
+	defer os.Chdir("..")
+	var checksum string
+	switch runtime.GOOS {
+	case "darwin":
+		checksum, err = sh.Output("shasum", "-a", "256", filename)
+	default:
+		checksum, err = sh.Output("sha256sum", filename)
+	}
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(filename+".sha256", []byte(checksum), 0644)
 }
 
 // Fmt runs go fmt
