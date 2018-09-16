@@ -4,7 +4,7 @@ A passphrase generator in the style of XKCD comic **[Password Strength]**.
 
 ## Getting started
 
-This project requires Go to be installed.
+This project requires Go 1.11 to be installed, as it uses the new go module system for dependency management.
 On OS X with Homebrew you can just run `brew install go`.
 On Linux check with your distro's package manager.
 Alternatively, or on Windows, download the Go source or binary from [golang.org](https://golang.org/dl/).
@@ -12,19 +12,20 @@ Alternatively, or on Windows, download the Go source or binary from [golang.org]
 Running it then should be as simple as:
 
 ```console
-$ make
-...
-▶ building executable…
+$ git clone https://gitub.com/wfscheper/xkcdpwd.git
+$ cd xkcdpwd
+$ go get github.com/magefile/mage
+$ mage
 $ bin/xkcdpwd
 ```
 
 ## Testing
 
-``make test``
+``mage test``
 
 To generate coverage data:
 
-``make test-coverage``
+``mage coverage``
 
 ## Similar projects
 
