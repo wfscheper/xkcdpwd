@@ -35,7 +35,7 @@ func TestIntegration(t *testing.T) {
 	}
 
 	var relPath = "testdata"
-	filepath.Walk(relPath, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(relPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			t.Fatal("error walking testdata")
 		}
@@ -55,6 +55,9 @@ func TestIntegration(t *testing.T) {
 		})
 		return nil
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func runTest(name, relPath, wd string, run test.RunFunc) func(t *testing.T) {

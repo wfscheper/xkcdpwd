@@ -29,10 +29,6 @@ import (
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	"github.com/magefile/mage/target"
-
-	// tools
-	_ "github.com/shuLhan/go-bindata"
-	_ "golang.org/x/lint"
 )
 
 const (
@@ -48,11 +44,11 @@ var (
 	goexe   = "go"
 
 	// commands
-	gofmt     = sh.RunCmd(goexe, "fmt")
-	gotest    = sh.RunCmd(goexe, "test", "-timeout", "15s")
-	govet     = sh.RunCmd(goexe, "vet")
-	goveralls = filepath.Join("tools", "goveralls")
-	golint    = filepath.Join("tools", "golint")
+	gofmt        = sh.RunCmd(goexe, "fmt")
+	gotest       = sh.RunCmd(goexe, "test", "-timeout", "15s")
+	govet        = sh.RunCmd(goexe, "vet")
+	goveralls    = filepath.Join("tools", "goveralls")
+	golangcilint = filepath.Join("tools", "golangci-lint")
 
 	// distribution targets
 	platforms = []string{"darwin", "linux", "windows"}
@@ -188,19 +184,19 @@ func getGobindata(ctx context.Context) error {
 	return nil
 }
 
-// Lint runs golint
+// Lint runs golangci-lint
 func Lint(ctx context.Context) error {
-	mg.CtxDeps(ctx, getGolint)
-	fmt.Println("running golint…")
-	return sh.Run(golint, "./...")
+	mg.CtxDeps(ctx, getGolangciLint)
+	fmt.Println("running golagnci-lint…")
+	return sh.Run(golangcilint, "run")
 }
 
-func getGolint(ctx context.Context) error {
-	if rebuild, err := target.Path(golint); err != nil {
+func getGolangciLint(ctx context.Context) error {
+	if rebuild, err := target.Path(golangcilint); err != nil {
 		return err
 	} else if rebuild {
-		fmt.Println("getting golint…")
-		return sh.RunWith(toolsEnv(), goexe, "install", "golang.org/x/lint/golint")
+		fmt.Println("getting golangci-lint…")
+		return sh.RunWith(toolsEnv(), goexe, "install", "github.com/golangci/golangci-lint/cmd/golangci-lint")
 	}
 	return nil
 }

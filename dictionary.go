@@ -75,10 +75,7 @@ func NewDictionary(r io.Reader) *Dictionary {
 	// sort words according to length, so that we can more easily
 	// filter them later
 	sort.Slice(d.words, func(i, j int) bool {
-		if len(d.words[i]) < len(d.words[j]) {
-			return true
-		}
-		return false
+		return len(d.words[i]) < len(d.words[j])
 	})
 	return d
 }
@@ -180,7 +177,7 @@ func (d *Dictionary) Passphrase(n int) ([]string, error) {
 		return nil, fmt.Errorf("dictionary cannot support more than %0.0f bits of entropy", minEntropy)
 	}
 	dictLengh := big.NewInt(int64(d.Length() - 1))
-	words := make([]string, n, n)
+	words := make([]string, n)
 	for i := 0; i < n; i++ {
 		idx, err := rand.Int(d.randReader, dictLengh)
 		if err != nil {

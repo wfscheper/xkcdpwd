@@ -413,7 +413,7 @@ func TestCapitalizeFirst(t *testing.T) {
 }
 
 func BenchmarkNewDictionaySorted(b *testing.B) {
-	data := make([]string, 5000, 5000)
+	data := make([]string, 5000)
 	length := 3
 	wordsPerLength := len(data) / 10
 	for i := 0; i < len(data); i++ {
@@ -423,7 +423,7 @@ func BenchmarkNewDictionaySorted(b *testing.B) {
 }
 
 func BenchmarkNewDictionayReversed(b *testing.B) {
-	data := make([]string, 5000, 5000)
+	data := make([]string, 5000)
 	length := 12
 	wordsPerLength := len(data) / 10
 	for i := 0; i < len(data); i++ {
@@ -433,7 +433,7 @@ func BenchmarkNewDictionayReversed(b *testing.B) {
 }
 
 func BenchmarkNewDictionayRandom(b *testing.B) {
-	data := make([]string, 5000, 5000)
+	data := make([]string, 5000)
 	for i := 0; i < len(data); i++ {
 		length := rand.Intn(11) + 1
 		data[i] = strings.Repeat("1", length)
