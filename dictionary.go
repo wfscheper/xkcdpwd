@@ -11,8 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate go-bindata -prefix internal/langs/ -o internal/langs/languages.go -pkg langs internal/langs/languages/...
-
 package xkcdpwd
 
 import (
@@ -25,8 +23,6 @@ import (
 	"math/big"
 	"sort"
 	"strings"
-
-	"golang.org/x/text/language"
 
 	"github.com/wfscheper/xkcdpwd/internal/langs"
 )
@@ -212,18 +208,11 @@ func (d *Dictionary) Passphrase(n int) ([]string, error) {
 	return words, nil
 }
 
-var matcher = language.NewMatcher([]language.Tag{
-	language.English,
-})
-
 // GetDict returns the dictionary associated with the language code lang.
 func GetDict(lang string) *Dictionary {
-	tag, _ := language.MatchStrings(matcher, lang)
-	switch tag {
-	case language.English:
-		data := langs.MustAsset("languages/en")
-		return NewDictionary(bytes.NewBuffer(data))
-	default:
+	data, err := langs.GetLanguage(lang)
+	if err != nil {
 		return nil
 	}
+	return NewDictionary(bytes.NewBuffer(data))
 }

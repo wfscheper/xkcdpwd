@@ -160,14 +160,16 @@ func Fmt(ctx context.Context) error {
 
 // Generate generates dictionary files
 func Generate(ctx context.Context) error {
-	rebuild, err := target.Dir(filepath.Join(".", "internal", "langs", "languages.go"), filepath.Join(".", "internal", "langs", "languages"))
+	dst := filepath.Join(".", "internal", "langs", "languages_vfsdata.go")
+	src := filepath.Join(".", "internal", "langs", "languages")
+	rebuild, err := target.Dir(dst, src)
 	if err != nil {
 		return err
 	}
 	if rebuild {
 		mg.CtxDeps(ctx, getGobindata)
 		fmt.Println("running go generate…")
-		return sh.RunWith(toolsEnv(), goexe, "generate", filepath.Join(".", "dictionary.go"))
+		return sh.RunWith(toolsEnv(), goexe, "generate", "-x", "./...")
 	}
 	return nil
 }
