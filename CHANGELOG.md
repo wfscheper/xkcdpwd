@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [v0.1.3] - 2019-09-20
+
+### Fixed
+
+- Fix travis deploy conidtional
+
+## [v0.1.2] - 2019-09-17
+
+### Changed
+
+- Replace golint with golangci-lint
+- Use goreleaser.
+
 ## [v0.1.1] - 2018-09-15
 
 ### Changed
@@ -30,4 +43,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Control the character used to separate words in the passphrase.
 - Support config files for changing defaults for all command-line options.
 
-[v0.1.1]: https://github.com/wfscheper/xkcdpwd/compare/v0.1.0...master
+[v0.1.3]: https://github.com/wfscheper/xkcdpwd/compare/v0.1.2...v0.1.3
+[v0.1.2]: https://github.com/wfscheper/xkcdpwd/compare/v0.1.1...v0.1.2
+[v0.1.1]: https://github.com/wfscheper/xkcdpwd/compare/v0.1.0...v0.1.1
+[v0.1.1]: https://github.com/wfscheper/xkcdpwd/compare/4ec2e6...v0.1.0

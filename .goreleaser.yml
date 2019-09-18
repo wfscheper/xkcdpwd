@@ -8,7 +8,6 @@ env:
 before:
   hooks:
     - go mod download
-    - go generate ./...
 builds:
 - binary: xkcdpwd
   main: ./cmd/xkcdpwd
