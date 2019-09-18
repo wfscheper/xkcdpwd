@@ -36,5 +36,5 @@ tags
 # Ignore build output and vendor directories
 /bin/
 /coverage/
+/dist/
 /tools/
-/vendor/

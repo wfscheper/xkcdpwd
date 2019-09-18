@@ -3,7 +3,8 @@ sudo: false
 notifications:
   email: false
 go: 
-- 1.11
+- 1.12.x
+- 1.13.x
 - tip
 os:
 - linux
@@ -22,37 +23,10 @@ matrix:
   allow_failures:
   - go: tip
   fast_finish: true
-jobs:
-  include:
-  - stage: deploy
-    name: "Deploy release to GitHub"
-    go: 1.11
-    os: linux
-    install:
-    - go mod download
-    - go get -v github.com/magefile/mage
-    script: skip
-    before_deploy:
-    - mage -v dist
-    deploy:
-      provider: releases
-      api_key:
-        secure: Af0g1jALoXDhtnB5mVuaZ/axK3ACVtf+Bi6FMauei2DKuuupU2OWQvCX8pLU6q/kpK9zYXPGCr56cQ6MIWJZ+v09L8bg3D5W8lDY9x6ArNkbLA9sA1XyLpQPd7OLaQgUUvcbRWz5EYm3OCuEfNGHXiCN7WrzvOt2pp96DGvaxSILcMHFhT3OC6SThJG9LOvFBZX3+n1IPVbxSfukU/WYBfuwlQ3KVnMFv68+pCXOBiEwC2HlhgTCqvSBlKIEZB8u7jxpDqp/jBqws6wgXSLwrPCVyCNwaM93M0bl9Asw8iHRHoKklC+JyaxR1r4/KtlY4yKelHRdhAaBwHP2WwcTyz3IIvN/O6H6o7pkkxsElb0W1u4+40QVdnSNabqMHFXqaaRirZjU3cALB2/OmjiGcwLV2hSMrGO0Amzsl9pcIFYPfzabGNXO/AsNI3OJIBWuIzJF9ve+/BVwlzupAgFxbMU5mPx1iVxK/QBbG/CnqK1IAAQG750ZzF/EJ6efa9OpUuDI7fBX/Buu50A9n3hHZjipU6Cov3VjRzR/bylnmlY6fheRH8d/Fe3v15am3WQETkhXkwAX3iczIeezpy4gVSu9zbIfV5r3NYCFVTt2nOpcuMY/Wtsx9l1S6+We8PCU8HR9JmrxHbaqfptqTC+429SeFltE5xbApfj1zfcAO3Q=
-      file:
-      - dist/xkcdpwd-linux-amd64
-      - dist/xkcdpwd-linux-amd64.sha256
-      - dist/xkcdpwd-darwin-amd64
-      - dist/xkcdpwd-darwin-amd64.sha256
-      - dist/xkcdpwd-windows-amd64.exe
-      - dist/xkcdpwd-windows-amd64.exe.sha256
-      - dist/xkcdpwd-linux-386
-      - dist/xkcdpwd-linux-386.sha256
-      - dist/xkcdpwd-darwin-386
-      - dist/xkcdpwd-darwin-386.sha256
-      - dist/xkcdpwd-windows-386.exe
-      - dist/xkcdpwd-windows-386.exe.sha256
-      skip_cleanup: true
-      on:
-        repo: wfscheper/xkcdpwd
-        branch: master
-        tags: true
+deploy:
+- provider: script
+  skip_cleanup: true
+  script: curl -sL https://git.io/goreleaser | bash
+  on:
+    tags: true
+    condition: $TRAVIS_OS_NAME = linux AND $TRAVIS_GO_VERSION =~ ^1\.13
