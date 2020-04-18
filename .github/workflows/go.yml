@@ -1,0 +1,51 @@
+name: Go
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    name: Test on go ${{ matrix.go_version }} and ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        go_version: [1.14, 1.13]
+        os: [ubuntu-latest, macOS-latest]
+    steps:
+      - name: Set up Go ${{ matrix.go_version }}
+        uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.go_version }}
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Get dependencies
+        run: go mod download
+
+      - name: Lint code
+        uses: crazy-max/ghaction-mage@v1
+        with:
+          version: latest
+          args: -v lint
+
+      - name: Build
+        uses: crazy-max/ghaction-mage@v1
+        with:
+          version: latest
+          args: -v build
+
+      - name: Test
+        uses: crazy-max/ghaction-mage@v1
+        with:
+          version: latest
+          args: -v coverage
+
+      - name: Send coverage
+        uses: shogo82148/actions-goveralls@v1
+        with:
+          path-to-profile: coverage/cover.out
