@@ -1,0 +1,46 @@
+# For most projects, this workflow file will not need changing; you simply need
+# to commit it to your repository.
+#
+# You may wish to alter this file to override the set of languages analyzed,
+# or to provide custom queries or build logic.
+#
+# ******** NOTE ********
+# We have attempted to detect the languages in your repository. Please check
+# the `language` matrix defined below to confirm you have the correct set of
+# supported CodeQL languages.
+#
+name: "CodeQL"
+
+on:
+  push:
+    branches: [main, release-*]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [main]
+  schedule:
+    - cron: "31 17 * * 3"
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["go", "javascript"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2.3.4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@546b30f35ae5a3db0e0be1843008c2224f71c3b0 # v1.0.15
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@546b30f35ae5a3db0e0be1843008c2224f71c3b0 # v1.0.15
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@546b30f35ae5a3db0e0be1843008c2224f71c3b0 # v1.0.15

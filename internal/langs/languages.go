@@ -11,16 +11,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate go run -tags=dev languages_generate.go
-
 package langs
 
 import (
+	"embed"
 	"fmt"
-	"io/ioutil"
 
 	"golang.org/x/text/language"
 )
+
+//go:embed languages
+var Languages embed.FS
 
 var matcher = language.NewMatcher([]language.Tag{
 	language.English,
@@ -30,12 +31,7 @@ func GetLanguage(lang string) ([]byte, error) {
 	tag, _ := language.MatchStrings(matcher, lang)
 	switch tag {
 	case language.English:
-		file, err := Languages.Open("/en")
-		if err != nil {
-			return nil, err
-		}
-		defer file.Close()
-		return ioutil.ReadAll(file)
+		return Languages.ReadFile("languages/en")
 	default:
 		return nil, fmt.Errorf("No language file found for %s", lang)
 	}

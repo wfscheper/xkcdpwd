@@ -1,0 +1,22 @@
+---
+name: Tag
+
+on:
+  push:
+    branches: [main, release-*]
+
+jobs:
+  tag:
+    name: Tag release commit
+    if: "startsWith(github.event.commits[0].message, 'release: ')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@ec3a7ce113134d7a93b817d10a8272cb61118579 # v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Tag commit
+        run: make release
+        env:
+          DRYRUN: "false"

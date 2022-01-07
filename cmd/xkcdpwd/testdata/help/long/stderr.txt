@@ -14,4 +14,3 @@ Flags:
   -v           be more verbose (default: false)
   -version     show version information (default: false)
   -words       the number of words in each passphrase (default: 4)
-
