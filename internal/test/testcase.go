@@ -16,12 +16,21 @@ package test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+const (
+	posixLineEnding   = "\n"
+	windowsLineEnding = "\r\n"
 )
 
 // Case loads a testdata.json test configuration and executes that test.
@@ -61,65 +70,71 @@ func NewCase(t *testing.T, dir, name string) *Case {
 
 // CompareOutput compares stdout to the contents of a stdout.txt file in the test directory.
 func (c *Case) CompareOutput(stdout string) {
-	expected, err := ioutil.ReadFile(filepath.Join(c.rootPath, "stdout.txt"))
-	if err != nil {
-		if os.IsNotExist(err) {
-			// check against number of passphrases generated and number of words per passpharse
-			passphrases := strings.Split(strings.Trim(stdout, "\n"), "\n")
-			if c.Passphrases != nil {
-				if len(passphrases) != int(*c.Passphrases) {
-					c.t.Errorf("stdout was not as expected\nWANT:\n%d passphrases\nGOT:\n%d passphrases\n\n%s",
-						*c.Passphrases, len(passphrases), stdout)
-				}
-			}
-			if c.Words != nil {
-				for line, passphrase := range passphrases {
-					var words []string
-					if *c.Separator == "" {
-						words = []string{passphrase}
-					} else {
-						words = strings.Split(passphrase, *c.Separator)
-					}
-					if uint(len(words)) != *c.Words {
-						c.t.Errorf("stdout was not as expected\nWANT:\n%d words\nGOT:\n%d words in line %d\n\n%s",
-							*c.Words, len(words), line+1, stdout)
-					}
-				}
-			}
-			return
-		}
-		panic(err)
-	}
+	c.t.Helper()
 
-	if stdout != string(expected) {
-		c.t.Errorf("stdout was not as expected\nWANT:\n%s\nGOT:\n%s\n", expected, stdout)
+	stdout = normalizeLineEndings(stdout)
+
+	stdoutFile := filepath.Join(c.rootPath, "stdout.txt")
+	if data, err := ioutil.ReadFile(stdoutFile); err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			c.t.Fatalf("unable to read %s: %v", stdoutFile, err)
+		}
+		// check against number of passphrases generated and number of words per passpharse
+		passphrases := strings.Split(strings.Trim(stdout, "\n"), "\n")
+		if c.Passphrases != nil {
+			if len(passphrases) != int(*c.Passphrases) {
+				c.t.Errorf("stdout was not as expected\nWANT:\n%d passphrases\nGOT:\n%d passphrases\n\n%s",
+					*c.Passphrases, len(passphrases), stdout)
+			}
+		}
+		if c.Words != nil {
+			for line, passphrase := range passphrases {
+				var words []string
+				if *c.Separator == "" {
+					words = []string{passphrase}
+				} else {
+					words = strings.Split(passphrase, *c.Separator)
+				}
+				if uint(len(words)) != *c.Words {
+					c.t.Errorf("stdout was not as expected\nWANT:\n%d words\nGOT:\n%d words in line %d\n\n%s",
+						*c.Words, len(words), line+1, stdout)
+				}
+			}
+		}
+	} else {
+		expected := normalizeLineEndings(string(data))
+		assert.Equal(c.t, expected, stdout, "stdout was not as expected")
 	}
 }
 
 // CompareError compares stderr to the contents of a stderr.txt file in the test directory.
 func (c *Case) CompareError(errIn error, stderr string) {
-	var expected string
-	if expectedData, err := ioutil.ReadFile(filepath.Join(c.rootPath, "stderr.txt")); err != nil {
-		if !os.IsNotExist(err) {
-			panic(err)
+	c.t.Helper()
+
+	stderr = normalizeLineEndings(stderr)
+
+	stderrFile := filepath.Join(c.rootPath, "stderr.txt")
+	if data, err := ioutil.ReadFile(stderrFile); err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			c.t.Fatalf("unable to read %s: %v", stderrFile, err)
 		}
 	} else {
-		expected = string(expectedData)
-	}
-	expectError := expected != ""
-	gotError := stderr != "" && errIn != nil
-	if expectError && gotError {
-		switch matches := strings.Count(stderr, expected); matches {
-		case 0:
-			c.t.Errorf("stderror did not contain the expected error\nWANT:\n%s\nGOT:\n%s\n", expected, stderr)
-		case 1:
-		default:
-			c.t.Errorf("expected error '%s' occured %d times in stderr %s", expected, matches, stderr)
+		expected := normalizeLineEndings(string(data))
+		expectError := expected != ""
+		gotError := stderr != "" && errIn != nil
+		if expectError && gotError {
+			switch matches := strings.Count(stderr, expected); matches {
+			case 0:
+				c.t.Errorf("stderror did not contain the expected error\nWANT:\n%#v\nGOT:\n%#v\n", expected, stderr)
+			case 1:
+			default:
+				c.t.Errorf("expected error '%#v' occured %d times in stderr %#v", expected, matches, stderr)
+			}
+		} else if expectError && !gotError {
+			c.t.Errorf("expected error: %#v", expected)
+		} else if !expectError && gotError {
+			c.t.Errorf("unexpected error: %#v", stderr)
 		}
-	} else if expectError && !gotError {
-		c.t.Errorf("expected error:\n%s", expected)
-	} else if !expectError && gotError {
-		c.t.Errorf("unexpected error:\n%s", stderr)
 	}
 }
 
@@ -211,3 +226,11 @@ func (te *Environment) Run(args []string) error {
 
 // RunFunc is a function that runs a test.
 type RunFunc func(prog string, args []string, stdout, stderr io.Writer, dir string, env []string) error
+
+func normalizeLineEndings(s string) string {
+	if runtime.GOOS == "windows" {
+		return strings.ReplaceAll(s, windowsLineEnding, posixLineEnding)
+	}
+
+	return s
+}

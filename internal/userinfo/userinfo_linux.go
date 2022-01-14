@@ -18,9 +18,11 @@ import (
 	"path/filepath"
 )
 
+const envXdgConfigHome = "XDG_CONFIG_HOME"
+
 // DefaultConfigDir returns the path to the OS specific user config directory.
 func DefaultConfigDir(homeDir string) string {
-	if cfgDir, ok := os.LookupEnv("XDG_CONFIG_HOME"); ok {
+	if cfgDir, ok := os.LookupEnv(envXdgConfigHome); ok {
 		return cfgDir
 	}
 	return filepath.Join(homeDir, ".config")

@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         go_version: [1.17, 1.18]
-        os: [ubuntu-latest, macOS-latest]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
     steps:
       - name: Set up Go ${{ matrix.go_version }}
         uses: actions/setup-go@331ce1d993939866bb63c32c6cbbfd48fa76fc57 # v2.1.4
@@ -45,7 +45,7 @@ jobs:
           key: ${{ matrix.os }}-go-${{ matrix.go_version }}-mod-${{ hashFiles('**/go.sum') }}
 
       - name: Get dependencies
-        run: go mod download
+        run: go mod download all
 
       - name: Build
         run: make build

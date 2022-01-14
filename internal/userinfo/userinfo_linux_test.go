@@ -19,9 +19,18 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDefaultConfigDir(t *testing.T) {
+	// disable xdg_config_home so we can control the output
+	if v, ok := os.LookupEnv(envXdgConfigHome); ok {
+		require.NoError(t, os.Unsetenv(envXdgConfigHome))
+		t.Cleanup(func() {
+			_ = os.Setenv(envXdgConfigHome, v)
+		})
+	}
+
 	got := DefaultConfigDir("foo")
 	assert.Equal(t, "foo/.config", got)
 }
@@ -35,10 +44,13 @@ func TestDefaultConfigFile(t *testing.T) {
 }
 
 func TestDefaultConfigDirEnv(t *testing.T) {
-	os.Setenv("XDG_CONFIG_HOME", "/foo")
-	t.Cleanup(func() {
-		_ = os.Unsetenv("XDG_CONFIG_HOME")
-	})
+	// force xdg_config_home
+	if v, ok := os.LookupEnv(envXdgConfigHome); ok {
+		t.Cleanup(func() {
+			_ = os.Setenv(envXdgConfigHome, v)
+		})
+	}
+	require.NoError(t, os.Setenv(envXdgConfigHome, "/foo"))
 
 	got := DefaultConfigDir("bar")
 	assert.Equal(t, "/foo", got)

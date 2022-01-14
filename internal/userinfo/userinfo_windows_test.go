@@ -10,12 +10,16 @@ import (
 
 func TestDefaultConfigDir(t *testing.T) {
 	got := DefaultConfigDir("foo")
-	assert.Equal(t, "foo\\Library\\Application Support", got)
+	if want, ok := os.LookupEnv("APPDATA"); ok {
+		assert.Equal(t, want, got)
+	} else {
+		assert.Equal(t, "foo\\AppData\\Roaming", got)
+	}
 }
 
 func TestDefaultConfigFile(t *testing.T) {
 	if got, err := DefaultConfigFile("foo"); assert.NoError(t, err) {
-		want := filepath.Join("/Users", os.Getenv("USER"), "Library/Application Support", "foo", "foo.conf")
+		want := filepath.Join("C:", "/Users", os.Getenv("USER"), "AppData", "Roaming", "foo", "foo.conf")
 		assert.Equal(t, want, got)
 	}
 }
