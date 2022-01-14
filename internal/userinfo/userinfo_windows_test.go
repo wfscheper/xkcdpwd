@@ -10,7 +10,7 @@ import (
 
 func TestDefaultConfigDir(t *testing.T) {
 	got := DefaultConfigDir("foo")
-	assert.Equal(t, "foo/Library/Application Support", got)
+	assert.Equal(t, "foo\\Library\\Application Support", got)
 }
 
 func TestDefaultConfigFile(t *testing.T) {

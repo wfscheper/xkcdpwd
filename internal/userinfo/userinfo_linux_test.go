@@ -17,35 +17,29 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDefaultConfigDir(t *testing.T) {
-	actual := DefaultConfigDir("foo")
-	if "foo/.config" != actual {
-		t.Errorf("wrong config dir")
-	}
+	got := DefaultConfigDir("foo")
+	assert.Equal(t, "foo/.config", got)
 }
 
 func TestDefaultConfigFile(t *testing.T) {
-	actual, err := DefaultConfigFile("foo")
-	if err != nil {
-		t.Fatal(err)
-	}
-	expected := filepath.Join("/home", os.Getenv("USER"), ".config", "foo", "foo.conf")
-	if actual != expected {
-		t.Errorf("wrong config file")
+	got, err := DefaultConfigFile("foo")
+	if assert.NoError(t, err) {
+		want := filepath.Join("/home", os.Getenv("USER"), ".config", "foo", "foo.conf")
+		assert.Equal(t, want, got)
 	}
 }
 
 func TestDefaultConfigDirEnv(t *testing.T) {
 	os.Setenv("XDG_CONFIG_HOME", "/foo")
-	defer func() {
-		if err := os.Unsetenv("XDG_CONFIG_HOME"); err != nil {
-			t.Fatal(err)
-		}
-	}()
-	actual := DefaultConfigDir("bar")
-	if actual != "/foo" {
-		t.Error("wrong config dir")
-	}
+	t.Cleanup(func() {
+		_ = os.Unsetenv("XDG_CONFIG_HOME")
+	})
+
+	got := DefaultConfigDir("bar")
+	assert.Equal(t, "/foo", got)
 }
