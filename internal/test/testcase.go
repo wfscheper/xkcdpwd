@@ -17,7 +17,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -44,7 +43,7 @@ func NewCase(t *testing.T, dir, name string) *Case {
 		name:     name,
 		rootPath: rootPath,
 	}
-	data, err := ioutil.ReadFile(filepath.Join(rootPath, "testcase.json"))
+	data, err := os.ReadFile(filepath.Join(rootPath, "testcase.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,7 +60,7 @@ func NewCase(t *testing.T, dir, name string) *Case {
 
 // CompareOutput compares stdout to the contents of a stdout.txt file in the test directory.
 func (c *Case) CompareOutput(stdout string) {
-	expected, err := ioutil.ReadFile(filepath.Join(c.rootPath, "stdout.txt"))
+	expected, err := os.ReadFile(filepath.Join(c.rootPath, "stdout.txt"))
 	if err != nil {
 		if os.IsNotExist(err) {
 			// check against number of passphrases generated and number of words per passpharse
@@ -99,7 +98,7 @@ func (c *Case) CompareOutput(stdout string) {
 // CompareError compares stderr to the contents of a stderr.txt file in the test directory.
 func (c *Case) CompareError(errIn error, stderr string) {
 	var expected string
-	if expectedData, err := ioutil.ReadFile(filepath.Join(c.rootPath, "stderr.txt")); err != nil {
+	if expectedData, err := os.ReadFile(filepath.Join(c.rootPath, "stderr.txt")); err != nil {
 		if !os.IsNotExist(err) {
 			panic(err)
 		}
@@ -135,7 +134,7 @@ func (c *Case) UpdateStderr(stderr string) {
 		panic(err)
 	}
 
-	if err := ioutil.WriteFile(stderrPath, []byte(stderr), 0644); err != nil {
+	if err := os.WriteFile(stderrPath, []byte(stderr), 0644); err != nil {
 		c.t.Fatal(err)
 	}
 }
@@ -152,7 +151,7 @@ func (c *Case) UpdateStdout(stdout string) {
 		panic(err)
 	}
 
-	if err := ioutil.WriteFile(stdoutPath, []byte(stdout), 0644); err != nil {
+	if err := os.WriteFile(stdoutPath, []byte(stdout), 0644); err != nil {
 		c.t.Fatal(err)
 	}
 }

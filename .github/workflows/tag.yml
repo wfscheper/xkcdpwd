@@ -1,0 +1,22 @@
+---
+name: Tag
+
+on:
+  push:
+    branches: [main, release-*]
+
+jobs:
+  tag:
+    name: Tag release commit
+    if: "startsWith(github.event.commits[0].message, 'release: ')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Tag commit
+        run: |
+          make tools/gotagger
+          tools/gotagger -push

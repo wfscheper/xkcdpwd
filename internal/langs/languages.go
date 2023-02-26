@@ -16,11 +16,15 @@
 package langs
 
 import (
+	"embed"
 	"fmt"
-	"io/ioutil"
+	"io"
 
 	"golang.org/x/text/language"
 )
+
+//go:embed languages
+var langs embed.FS
 
 var matcher = language.NewMatcher([]language.Tag{
 	language.English,
@@ -30,12 +34,12 @@ func GetLanguage(lang string) ([]byte, error) {
 	tag, _ := language.MatchStrings(matcher, lang)
 	switch tag {
 	case language.English:
-		file, err := Languages.Open("/en")
+		file, err := langs.Open("languages/en")
 		if err != nil {
 			return nil, err
 		}
 		defer file.Close()
-		return ioutil.ReadAll(file)
+		return io.ReadAll(file)
 	default:
 		return nil, fmt.Errorf("No language file found for %s", lang)
 	}

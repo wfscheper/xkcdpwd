@@ -35,6 +35,10 @@ tags
 
 # Ignore build output and vendor directories
 /bin/
-/coverage/
+/cover.out
 /dist/
-/tools/
+/junit.xml
+/tools/golangci-lint
+/tools/goreleaser
+/tools/gotagger
+/tools/gotestsum

@@ -1,38 +1,38 @@
+---
 # This is an example goreleaser.yaml file with some sane defaults.
 # Make sure to check the documentation at http://goreleaser.com
 project_name: xkcdpwd
 env:
-- CGO_ENABLED=0
-- GO111MODULE=on
-- GOPROXY=https://proxy.golang.org
+  - CGO_ENABLED=0
+  - GO111MODULE=on
+  - GOPROXY=https://proxy.golang.org
 before:
   hooks:
     - go mod download
 builds:
-- binary: xkcdpwd
-  main: ./cmd/xkcdpwd
-  ldflags: -X main.version={{.Version}} -X main.buildDate={{.Date}} -X main.commitHash={{.FullCommit}}
-  goos:
-  - linux
-  - darwin
-  - windows
-  ignore:
-  - goos: darwin
-    goarch: 386
+  - binary: xkcdpwd
+    main: ./cmd/xkcdpwd
+    ldflags: |
+      -X main.buildDate={{.Date}}
+      -X main.commit={{.FullCommit}}
+      -X main.version={{.Version}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    ignore:
+      - goarch: "386"
 archives:
-- replacements:
-    darwin: Darwin
-    linux: Linux
-    windows: Windows
-    386: i386
-    amd64: x86_64
+  - format_overrides:
+      - goos: windows
+        format: zip
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 snapshot:
   name_template: "{{ .Tag }}-next"
 changelog:
   sort: asc
   filters:
     exclude:
-    - '^docs:'
-    - '^test:'
+      - "^docs:"
+      - "^test:"

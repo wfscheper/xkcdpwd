@@ -18,7 +18,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"runtime"
@@ -83,7 +82,7 @@ func (x *Xkcdpwd) Run() int {
 	var cfgfile string
 	var cfg *toml.Tree
 	cfgFlags := flag.NewFlagSet(appName, flag.ContinueOnError)
-	cfgFlags.SetOutput(ioutil.Discard)
+	cfgFlags.SetOutput(io.Discard)
 	cfgFlags.StringVar(&cfgfile, "cfgfile", "", "path to config file")
 	if err := cfgFlags.Parse(x.Args[1:]); err != nil {
 		switch err {

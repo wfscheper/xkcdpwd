@@ -12,11 +12,11 @@ Alternatively, or on Windows, download the Go source or binary from [golang.org]
 Running it then should be as simple as:
 
 ```console
-$ git clone https://gitub.com/wfscheper/xkcdpwd.git
-$ cd xkcdpwd
-$ go get github.com/magefile/mage
-$ mage
-$ bin/xkcdpwd
+git clone https://gitub.com/wfscheper/xkcdpwd.git
+cd xkcdpwd
+go get github.com/magefile/mage
+mage
+bin/xkcdpwd
 ```
 
 ## Testing
