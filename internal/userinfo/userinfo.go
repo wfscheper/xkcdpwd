@@ -17,21 +17,17 @@
 package userinfo
 
 import (
-	"errors"
-	"os/user"
+	"os"
 	"path/filepath"
 )
 
 // DefaultConfigFile returns the path to default location for a config file,
 // based on the underlying OS.
 func DefaultConfigFile(appName string) (string, error) {
-	u, err := user.Current()
+	configDir, err := os.UserConfigDir()
 	if err != nil {
 		return "", err
 	}
-	if u.HomeDir == "" {
-		return "", errors.New("cannot determine user specific home directory")
-	}
-	cfgDir := DefaultConfigDir(u.HomeDir)
-	return filepath.Join(cfgDir, appName, appName+".conf"), nil
+
+	return filepath.Join(configDir, appName, appName+".conf"), nil
 }
