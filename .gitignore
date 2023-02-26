@@ -42,3 +42,4 @@ tags
 /tools/goreleaser
 /tools/gotagger
 /tools/gotestsum
+/tools/stentor

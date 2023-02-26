@@ -27,7 +27,7 @@ build: $(BINARY)
 
 .PHONY: changelog
 changelog: | $(STENTOR) $(GOTAGGER) ; $(info $(M) generating changelog)
-	$Q $(STENTOR) $(STENTORFLAGS) $(shell bin/gotagger) $(shell git tag --list --sort=-version:refname | head -n1)
+	$Q $(STENTOR) $(STENTORFLAGS) $(shell $(GOTAGGER)) $(shell git tag --list --sort=-version:refname | head -n1)
 
 .PHONY: clean
 clean:
